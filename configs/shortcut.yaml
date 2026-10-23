@@ -1,0 +1,5 @@
+# Overrides only; merged on top of configs/base.yaml.
+classical:
+  C_grid: [0.01, 0.1, 1.0, 10.0]
+  cv_folds: 5
+  threshold: 0.5

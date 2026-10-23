@@ -1,0 +1,36 @@
+# data (never commit; see data/README.md)
+data/raw/
+data/processed/
+*.zip
+
+# experiment outputs
+results/logs/
+results/predictions/
+results/figures/
+models/
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.venv*/
+.ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# local secrets (Kaggle token, etc.)
+.env
+.kaggle/
+.cache/
+.tmp/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

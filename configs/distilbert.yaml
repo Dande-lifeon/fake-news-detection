@@ -1,0 +1,7 @@
+# Overrides only; merged on top of configs/base.yaml.
+distilbert:
+  model_name: distilbert-base-uncased
+  max_body_len: 256
+  batch_size: 16
+  epochs: 3
+  fp16: true

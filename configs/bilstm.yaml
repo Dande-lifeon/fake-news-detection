@@ -1,0 +1,5 @@
+# Overrides only; merged on top of configs/base.yaml.
+bilstm:
+  epochs: 10
+  batch_size: 64
+  max_body_len: 300

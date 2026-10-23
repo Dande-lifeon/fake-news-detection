@@ -1,0 +1,5 @@
+# Overrides only; merged on top of configs/base.yaml.
+classical:
+  model_type: svm
+  C_grid: [0.1, 1.0, 10.0]
+  threshold: 0.5

@@ -1,0 +1,67 @@
+seed: 42
+
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed
+  results_dir: results
+  models_dir: models
+
+data:
+  true_file: True.csv
+  fake_file: Fake.csv
+  min_text_len: 50
+  val_size: 0.10
+  test_size: 0.20
+  drop_cross_label_conflicts: true
+
+features:
+  title:
+    ngram_max: 2
+    min_df: 2
+    max_features: 20000
+    stop_words: english
+    sublinear_tf: true
+  body:
+    ngram_max: 2
+    min_df: 3
+    max_features: 50000
+    stop_words: english
+    sublinear_tf: true
+
+classical:
+  C_grid: [0.1, 1.0, 10.0]
+  cv_folds: 5
+  alpha_grid: [0.0, 0.05, 0.10, 0.15, 0.20, 0.25, 0.30, 0.35, 0.40, 0.45,
+               0.50, 0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85, 0.90, 0.95, 1.0]
+  threshold: 0.5
+
+bilstm:
+  max_title_len: 32
+  max_body_len: 300
+  vocab_size: 30000
+  min_freq: 2
+  embed_dim: 128
+  hidden_dim: 128
+  dropout: 0.2
+  batch_size: 64
+  lr: 0.001
+  epochs: 10
+  patience: 2
+
+distilbert:
+  model_name: distilbert-base-uncased
+  max_title_len: 32
+  max_body_len: 256
+  head_tokens: 198
+  tail_tokens: 56
+  batch_size: 16
+  lr: 0.00002
+  epochs: 3
+  warmup_ratio: 0.1
+  weight_decay: 0.01
+  fp16: true
+
+eval:
+  bootstrap_n: 1000
+  ci: 0.95
+  positive_label: 1
