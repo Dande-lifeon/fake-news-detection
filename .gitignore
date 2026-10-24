@@ -5,9 +5,10 @@ data/processed/
 
 # experiment outputs
 results/logs/
+results/smoke/
 results/predictions/
 results/figures/
-models/
+/models/
 
 # python
 __pycache__/

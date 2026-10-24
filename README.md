@@ -12,7 +12,7 @@ This repository is being built stage by stage following
 | 0 | repo skeleton, config system, tests, CI | ✅ |
 | 1 | dataset download + EDA report | ✅ |
 | 2 | cleaning, dedup/conflict audit, 70/10/20 split | ✅ |
-| 3 | TF-IDF + Logistic Regression / Linear SVM | ⬜ |
+| 3 | TF-IDF + Logistic Regression / Linear SVM | ✅ |
 | 4 | shortcut-feature baseline | ⬜ |
 | 5 | Bi-LSTM | ⬜ |
 | 6 | DistilBERT | ⬜ |
@@ -111,6 +111,25 @@ Run on 2026-10-23 with `min_text_len=50`, `seed=42`:
 `worldnews`; fake: the other six values) and dates differ, so both are excluded
 from every feature matrix. The cleaned CSV is ~293 MB because it keeps
 `text_raw`, `text_clean` and `dup_key`; use the Parquet file for training.
+
+## Classical baselines (stage 3)
+
+`python -m fakenews.train.classical --config configs/base.yaml --model {lr,svm} --final`
+
+One seed (42), TF-IDF fit on train only, `alpha` and thresholds selected on val,
+test read once after re-fitting on train+val. F1 (positive class = fake):
+
+| model | title_only | body_only | concat | fusion | alpha |
+|---|---|---|---|---|---|
+| LR val | 0.9387 | 0.9916 | 0.9939 | **0.9951** | 0.40 |
+| LR test | 0.9433 | 0.9940 | 0.9960 | **0.9962** | 0.40 |
+| SVM val | 0.9396 | 0.9939 | 0.9959 | **0.9960** | 0.50 |
+| SVM test | 0.9422 | 0.9954 | 0.9963 | **0.9970** | 0.50 |
+
+Test F1 uses the threshold tuned on val for the same condition. Per-sample
+probabilities live in `results/predictions/` (git-ignored); aggregate metrics in
+`results/metrics.csv`, the alpha curve in `results/fusion.json`. Title-only is
+clearly weaker than body-only, but fusing both still adds a small amount.
 
 ## Configuration
 
