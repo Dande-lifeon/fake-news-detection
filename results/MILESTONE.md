@@ -39,7 +39,7 @@
 - 逐条件 95% CI 已写入 `results/cis.csv`（200 行，accuracy/precision/recall/F1）。
 - 四张结果图已生成：四路 F1、探针对比、fusion 混淆矩阵、alpha 曲线。
 - FP/FN 样例表已生成：`results/error_examples.md`。
-- 神经模型代码已写好：Bi-LSTM 和 DistilBERT 的双编码/门控融合、训练入口和配置。
+- 神经模型代码骨架已写好：Bi-LSTM 和 DistilBERT 的双编码/门控融合、训练入口和配置；但还没有训练，masked 2×2 也还没接入。
 - 工程：50 个测试通过，ruff 通过，CI、环境记录、README 和运行日志齐全。
 
 ### 2.2 部分完成
