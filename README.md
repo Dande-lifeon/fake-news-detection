@@ -131,6 +131,12 @@ probabilities live in `results/predictions/` (git-ignored); aggregate metrics in
 `results/metrics.csv`, the alpha curve in `results/fusion.json`. Title-only is
 clearly weaker than body-only, but fusing both still adds a small amount.
 
+Full results, statistical checks and the interpretation caveats are kept in
+[`results/RESULTS.md`](results/RESULTS.md). The short version: body dominates,
+fusion/early-concat are statistically indistinguishable, and a one-line
+`(Reuters)` rule already reaches F1 0.994 — the benchmark is source-cue
+saturated, so these numbers are not evidence of real-world fact-checking.
+
 ## Configuration
 
 `configs/base.yaml` is the single source of truth; model configs only contain
