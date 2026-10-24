@@ -1,6 +1,6 @@
 # Fake News Detection — ISOT (binary text classification)
 
-**English** | [简体中文](README.zh-CN.md)
+**English** | [简体中文](README.zh.md)
 
 Detect whether a news article is **fake** (`label=1`) or **real** (`label=0`) from its
 **title + body**, using the ISOT Fake and Real News dataset
@@ -136,10 +136,10 @@ sensitivity check: they change test F1 by at most 0.0012 (e.g. SVM concat
 less calibrated, and logit averaging selects 0.30/0.45 with essentially the same
 test F1 (0.9961/0.9975).
 
-Test F1 uses the threshold tuned on val for the same condition. Per-sample
-probabilities live in `results/predictions/` (git-ignored); aggregate metrics in
-`results/metrics.csv`, the alpha curve in `results/fusion.json`. Title-only is
-clearly weaker than body-only, but fusing both still adds a small amount.
+Per-sample probabilities live in `results/predictions/` (git-ignored); the
+unified @0.5 table for every model/condition/split is `results/all_metrics.csv`.
+Title-only is clearly weaker than body-only, but fusing both still adds a small
+amount.
 
 Stage 4 / 8 reproducibility:
 
@@ -147,6 +147,7 @@ Stage 4 / 8 reproducibility:
 python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
+python -m fakenews.eval.collect_metrics --config configs/base.yaml
 ```
 
 Full results, statistical checks and the interpretation caveats are kept in

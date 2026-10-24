@@ -132,9 +132,9 @@ LR body tuned 0.9940 vs @0.5 0.9929）。`alpha` 是概率混合权重，不是�
 title 分支校准更差，换成 logit 平均后最优 alpha 变为 0.30/0.45，test F1 基本不变
 （0.9961/0.9975）。
 
-test F1 使用 val 上为同一条件选出的阈值。逐样本概率在 `results/predictions/`
-（已被 git 忽略）；汇总指标在 `results/metrics.csv`，alpha 曲线在 `results/fusion.json`。
-title-only 明显弱于 body-only，但二者融合仍能带来小幅提升。
+逐样本概率在 `results/predictions/`（已被 git 忽略）；所有模型/条件/划分的
+统一 @0.5 指标在 `results/all_metrics.csv`。title-only 明显弱于 body-only，
+但二者融合仍能带来小幅提升。
 
 Stage 4 / 8 复现命令：
 
@@ -142,6 +142,7 @@ Stage 4 / 8 复现命令：
 python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
+python -m fakenews.eval.collect_metrics --config configs/base.yaml
 ```
 
 完整结果、统计检验和解释性警告见
