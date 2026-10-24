@@ -1,5 +1,7 @@
 # Fake News Detection — ISOT (binary text classification)
 
+**English** | [简体中文](README.zh-CN.md)
+
 Detect whether a news article is **fake** (`label=1`) or **real** (`label=0`) from its
 **title + body**, using the ISOT Fake and Real News dataset
 ([Kaggle: clmentbisaillon/fake-and-real-news-dataset](https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset)).
