@@ -14,12 +14,13 @@
 | 1 | 数据下载 + EDA 报告 | ✅ |
 | 2 | 清洗、去重/冲突审计、70/10/20 划分 | ✅ |
 | 3 | TF-IDF + 逻辑回归 / 线性 SVM | ✅ |
-| 4 | shortcut 格式特征 baseline | ⬜ |
-| 5 | Bi-LSTM | ⬜ |
-| 6 | DistilBERT | ⬜ |
-| 7 | 评估、bootstrap 置信区间、错误分析 | ⬜ |
-| 8 | 来源线索遮蔽实验 | ⬜ |
+| 4 | shortcut 格式特征 baseline | ✅ |
+| 5 | Bi-LSTM（暂缓） | ⏸ |
+| 6 | DistilBERT（暂缓） | ⏸ |
+| 7 | 评估、bootstrap 置信区间、错误分析 | 🟡 |
+| 8 | 来源线索遮蔽实验 | ✅ |
 | 9 | 图表 + 文档 | ⬜ |
+| 10 | 时间划分 / LIAR / 近重复（暂缓） | ⏸ |
 
 ## 数据
 
@@ -129,10 +130,38 @@ test F1 使用 val 上为同一条件选出的阈值。逐样本概率在 `resul
 （已被 git 忽略）；汇总指标在 `results/metrics.csv`，alpha 曲线在 `results/fusion.json`。
 title-only 明显弱于 body-only，但二者融合仍能带来小幅提升。
 
+Stage 4 / 8 复现命令：
+
+```bash
+python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
+python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
+python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
+```
+
 完整结果、统计检验和解释性警告见
 [`results/RESULTS.md`](results/RESULTS.md)。简述：body 占主导，fusion 与 early concat
 在统计上无法区分；而且一条 `(Reuters)` 规则就已经达到 F1 0.994 —— 这个 benchmark
 已经被来源线索饱和，因此这些数字不能作为真实场景事实核查能力的证据。
+
+## 为什么这个 benchmark 已经饱和：5 条原始样本
+
+原始文件各取前 100 条就已经很明显。`True.csv`：91/100 条正文含 `(Reuters)`，
+0 条含 URL，0 条含 `getty`。`Fake.csv`：0 条含 `(Reuters)`，23 条含 URL，
+79 条含 `getty`，58 条含 `featured image`。
+
+| # | 标签 | 来源 | 片段 | 破绽 |
+|---|---|---|---|---|
+| 1 | real | `True.csv` #0 | `WASHINGTON (Reuters) - The head of a conservative Republican faction...` | 城市 + `(Reuters)` dateline |
+| 2 | real | `True.csv` #4 | `SEATTLE/WASHINGTON (Reuters) - President Donald Trump called on...` | 多城市 dateline |
+| 3 | fake | `Fake.csv` #0 | 标题：`Donald Trump Sends Out Embarrassing New Year’s Eve Message; This is Disturbing`；正文结尾 `Photo by Andrew Burton/Getty Images.` | 标题党 + Getty 署名 |
+| 4 | fake | `Fake.csv` #5 | 标题：`...Black Boy While He Is In Handcuffs (GRAPHIC IMAGES)`；正文结尾 `Featured image via David McNew/Stringer/Getty Images` | `Featured image` + Getty |
+| 5 | fake | `Fake.csv` #3 | 标题：`...Obama’s Name Coded Into His Website (IMAGES)`；正文含 `https://t.co/Fg7VacxRtJ pic.twitter.com/5gEMcjQTbH` | `t.co` / Twitter 嵌入 |
+
+诊断结果很直接：单条 `(Reuters)` 规则 test F1=0.9943，18 个格式特征 baseline
+F1=0.9954，完整 TF-IDF 模型 0.9962（LR）/ 0.9970（SVM）；配对 bootstrap 显示
+18 特征 baseline 与两个全文模型在统计上无法区分（对 LR p=0.43，对 SVM p=0.13）。
+去掉 dateline、URL 和媒体署名后，fusion F1 也只降到 0.9903–0.9944。数据集几乎
+完全靠来源格式区分，而不是靠文章真实性。
 
 ## 配置系统
 
@@ -155,6 +184,7 @@ CI（`.github/workflows/ci.yml`）在 Ubuntu 上运行 `ruff` 和 `pytest -m "no
 ## 硬件要求
 
 - TF-IDF + LR/SVM：笔记本 CPU，分钟级。
+- shortcut / 遮蔽实验：笔记本 CPU，几秒到几分钟。
 - Bi-LSTM：CPU/GPU，每个 epoch 约 20–60 分钟。
 - DistilBERT：Colab T4，每个 seed 约 20–40 分钟。
 

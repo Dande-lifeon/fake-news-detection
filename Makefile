@@ -1,7 +1,7 @@
 PY ?= python
 PYTHONPATH := .
 
-.PHONY: install install-neural data download eda clean split classical shortcut eval figures test lint smoke all
+.PHONY: install install-neural data download eda clean split classical shortcut source-cue eval figures test lint smoke all
 
 install:
 	$(PY) -m pip install -e ".[dev]"
@@ -24,11 +24,15 @@ split:
 data: download clean split
 
 classical:
-	$(PY) -m fakenews.train.classical --config configs/base.yaml --model lr
-	$(PY) -m fakenews.train.classical --config configs/base.yaml --model svm
+	$(PY) -m fakenews.train.classical --config configs/base.yaml --model lr --final
+	$(PY) -m fakenews.train.classical --config configs/base.yaml --model svm --final
 
 shortcut:
-	$(PY) -m fakenews.train.shortcut --config configs/shortcut.yaml
+	$(PY) -m fakenews.train.shortcut --config configs/shortcut.yaml --final
+
+source-cue:
+	$(PY) -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
+	$(PY) -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
 
 bilstm:
 	$(PY) -m fakenews.train.bilstm --config configs/bilstm.yaml --seed 42 --condition fusion
@@ -51,4 +55,4 @@ lint:
 smoke:
 	$(PY) -m fakenews.train.classical --config configs/base.yaml --smoke
 
-all: data classical shortcut
+all: data classical shortcut source-cue

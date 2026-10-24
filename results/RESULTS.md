@@ -21,7 +21,7 @@
 | 测试纪律 | test 只在 `--final` 读取一次；模型在 train+val 上 refit 后评估 |
 | 运行时间 | LR 约 45s；SVM 约 95s（CPU） |
 | run_id | `lr_seed42_20261024_123834`、`svm_seed42_20261024_123921` |
-| 代码版本 | `91b215a`（结果提交 `a203df6`） |
+| 代码版本 | Stage 3 `91b215a`；Stage 4/8 `01cc07a` |
 
 ---
 
@@ -85,24 +85,123 @@ fusion 的 test 混淆矩阵：LR TP=3447 / FP=11 / FN=15 / TN=4228；SVM TP=345
 - 错误样本可解释，不是数据/代码错位；
 - 四路消融方向正确：body > title，concat ≈ fusion。
 
-**但不能据此认为模型具备真实假新闻识别能力。** 单条 Reuters 正则就有 0.994 的 F1，说明数据集把"来源"泄漏成了"标签"。下一步应优先做：
-
-1. Stage 8 来源线索遮蔽（去 `(Reuters)` dateline、URL、`getty`/`featured image` 后重训），看 ΔF1；
-2. Stage 10 近重复分组划分，排除 1.3% 近重复的残余影响；
-3. Stage 4 shortcut baseline（18 个格式特征 + LR），量化"只靠格式能走多远"；
-4. 在报告中明确写"benchmark 饱和 + 来源捷径"，不要把高 F1 当作真实场景结论。
+**但不能据此认为模型具备真实假新闻识别能力。** 单条 Reuters 正则就有 0.994 的 F1，说明数据集把"来源"泄漏成了"标签"。Stage 4 和 Stage 8 就是对这一点的直接检验。
 
 ---
 
-## 3. 后续结果（占位，完成后更新）
+## 3. Stage 4 — shortcut / 格式特征 baseline
+
+只用 18 个格式特征（`fakenews/features/shortcut.py`），不读正文内容：
+Reuters dateline、URL、`via`/`getty`/`featured image`、关注/订阅、标题问号/感叹号、
+大写比例、长度、数字比例、引号数等。LR + 5 折 CV 选 C，train+val refit 后 test 一次。
+
+| 项目 | 值 |
+|---|---|
+| 特征数 | 18 |
+| 最优 C | 1.0 |
+| val F1 @0.5 / @0.55 | 0.9957 / 0.9968 |
+| **test F1 @0.55** | **0.9954** |
+| test Precision / Recall | 0.9911 / 0.9997 |
+| test ROC-AUC / PR-AUC | 0.9999 / 0.9998 |
+
+Top 系数（标准化后）：`has_reuters_dateline` −4.65、`starts_with_city_dateline` −1.63、
+`quote_count` −1.44、`title_len` +1.37、`has_getty` +1.36、`has_via` +1.34、
+`title_has_exclamation` +1.21。方向完全符合"来源/排版"解释。
+
+单特征规则（test）：
+
+| 规则 | F1 | Accuracy |
+|---|---:|---:|
+| 无 `(Reuters)` → fake | 0.9943 | 0.9948 |
+| 无 Reuters / 有 URL / 有 getty → fake | 0.9934 | 0.9940 |
+| 有 URL → fake | 0.2564 | 0.6159 |
+| 有 getty → fake | 0.3723 | 0.6532 |
+
+**对比 Stage 3：**18 个格式特征 test F1=0.9954，LR fusion=0.9962（仅高 0.0009），
+SVM fusion=0.9970（高 0.0017）。配对 bootstrap：shortcut−LR fusion = −0.0010
+（95% CI [−0.0031, +0.0010]，McNemar p=0.43）；shortcut−SVM fusion = −0.0017
+（95% CI [−0.0039, +0.0003]，p=0.13）。**18 个格式特征与完整正文模型在统计上
+无法区分。** 它甚至略高于 LR body-only @0.5（0.9929），与 SVM body-only（0.9957）
+基本持平。**不读正文语义，只用 18 个表层格式特征，就已经达到完整模型的 99.9% 水平。**
+
+---
+
+## 4. Stage 8 — 来源线索遮蔽实验
+
+在 train/val/test 上遮蔽正文后重训 LR/SVM，C 和 alpha 沿用 Stage 3，不再调参；
+test 只评估一次。两种遮蔽强度：
+
+- `dateline_url`：去 `CITY (Reuters) -` 与 URL（计划中的主实验）；
+- `format`：再额外去 `featured image`、`Photo by ... / Getty Images`、`Image via ...`、
+  `via`、`follow us`/`subscribe`、`read more`。
+
+### 4.1 命中数（清洗后全量）
+
+| 线索 | real（21,194） | fake（17,309） |
+|---|---:|---:|
+| `(Reuters)` | 21,027 | 7 |
+| URL | 41 | 2,504 |
+| `getty` | 4 | 4,060 |
+| `featured image` | 0 | 8,160 |
+| `via` | 465 | 9,620 |
+
+### 4.2 test F1（同一批样本、阈值 0.5）
+
+| 模型 | 遮蔽 | fusion 原 | fusion 遮蔽后 | Δfus | 95% CI | body Δ | title Δ |
+|---|---|---|---:|---:|---:|---|---:|---:|
+| LR | dateline_url | 0.9962 | 0.9928 | −0.0035 | [−0.0051, −0.0022] | −0.0070 | 0.0000 |
+| LR | format | 0.9962 | 0.9903 | −0.0059 | [−0.0080, −0.0041] | −0.0089 | 0.0000 |
+| SVM | dateline_url | 0.9970 | 0.9944 | −0.0026 | [−0.0038, −0.0014] | −0.0068 | 0.0000 |
+| SVM | format | 0.9970 | 0.9915 | −0.0055 | [−0.0073, −0.0038] | −0.0100 | 0.0000 |
+
+- 所有非 title 条件的 McNemar p ≤ 0.0003（format 全部 p<0.0001）；title-only 完全
+  不变（p=1），证明遮蔽只动了正文，没有误伤标题。
+- body-only 掉得比 fusion 多（−0.007～−0.010），因为 fusion 还有未遮蔽的标题。
+- **即使去掉 dateline、URL 和媒体署名，fusion 仍有 0.9903–0.9944。**
+- 遮蔽后 LR body 的 top 特征变成 `said`(−27.95)、`president donald`(−15.55)、
+  `just`(+12.58)、`gop`(+12.28)、`reuters`(−11.68)：仍有残余来源词、话题词和风格词，
+  说明"来源/话题"信号不止 dateline/URL 这一层。
+
+### 4.3 产物
+
+`results/source_cue.json`（两种模型 × 两种遮蔽 × 四个条件，含 CI/McNemar/命中数）、
+`results/feature_audit.csv`（original/dateline_url/format 的 top 特征）、
+`results/predictions/*_source_cue_*.parquet`（逐样本预测，git-ignored）。
+
+---
+
+## 5. 跨阶段诊断：benchmark 确实饱和
+
+| 探针 | test F1 |
+|---|---:|
+| 单条 `(Reuters)` 规则 | 0.9943 |
+| 18 个格式特征 + LR | 0.9954 |
+| LR body-only @0.5 | 0.9929 |
+| LR fusion（全文） | 0.9962 |
+| SVM fusion（全文） | 0.9970 |
+| LR fusion + dateline/URL 遮蔽 | 0.9928 |
+| LR fusion + format 遮蔽 | 0.9903 |
+| SVM fusion + dateline/URL 遮蔽 | 0.9944 |
+| SVM fusion + format 遮蔽 | 0.9915 |
+
+三个独立探针（正则、18 特征、全文模型）都落在 0.99–0.997；全文模型只比 18 个
+格式特征高 0.0009–0.0017；遮蔽来源线索只损失 0.0026–0.0059，仍然 99% 以上。
+**结论：ISOT 的标签几乎可以被"来源/排版/话题风格"直接解出，高 F1 不是内容理解
+或真实性推理的证据。** 这与公开文献中 ISOT 接近饱和的结论一致，属于数据集性质，
+不是实现错误。
+
+---
+
+## 6. 后续结果（状态）
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| 4 | shortcut / 格式特征 baseline | 待做 |
-| 5 | Bi-LSTM（title/body 双分支 + 门控融合） | 待做 |
-| 6 | DistilBERT（共享编码器 + 门控融合） | 待做 |
-| 7 | bootstrap CI、McNemar、错误分析、校准 | 部分完成（本页已含 Stage 3 的 CI/McNemar/校准） |
-| 8 | 来源线索遮蔽 ΔF1 | 待做 |
-| 10 | 时间划分 / LIAR / 近重复分组 | 待做 |
+| 4 | shortcut / 格式特征 baseline | ✅ 完成（test F1 0.9954） |
+| 5 | Bi-LSTM（title/body 双分支 + 门控融合） | ⏸ 按当前范围暂缓 |
+| 6 | DistilBERT（共享编码器 + 门控融合） | ⏸ 按当前范围暂缓 |
+| 7 | bootstrap CI、McNemar、错误分析、校准 | 🟡 已实现 bootstrap/McNemar/校准；`evaluate.py` 汇总器待做 |
+| 8 | 来源线索遮蔽 ΔF1 | ✅ 完成（两种遮蔽 × LR/SVM） |
+| 9 | 图表 + 文档 | ⬜ 部分文档已更新 |
+| 10 | 时间划分 / LIAR / 近重复分组 | ⏸ 按要求暂缓 |
 
-> 更新约定：每完成一个阶段，在本文件追加一节（指标表 + 关键发现 + 是否符合预期），并在 `results/metrics.csv` 追加对应行；不要覆盖旧结果。
+> 更新约定：每完成一个阶段，在本文件追加一节（指标表 + 关键发现 + 是否符合预期），并在 `results/metrics.csv` 追加对应行；不要覆盖旧结果。Stage 4/8 的逐样本预测和 JSON 已保存在 `results/` 下。

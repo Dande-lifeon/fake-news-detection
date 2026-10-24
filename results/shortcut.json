@@ -1,0 +1,220 @@
+{
+  "model": "shortcut",
+  "condition": "format",
+  "seed": 42,
+  "job_id": "shortcut_format_seed42_20261024_192939",
+  "run_id": "shortcut_format_seed42_20261024_192939",
+  "features": [
+    "has_reuters_dateline",
+    "has_url",
+    "has_via",
+    "has_getty",
+    "has_follow_us",
+    "has_our_standards",
+    "starts_with_city_dateline",
+    "title_has_question",
+    "title_has_exclamation",
+    "exclamation_count",
+    "question_count",
+    "uppercase_ratio",
+    "all_caps_word_count",
+    "title_len",
+    "text_len",
+    "digit_ratio",
+    "quote_count",
+    "body_has_url"
+  ],
+  "best_C": 1.0,
+  "thresholds": {
+    "default": 0.5,
+    "tuned": 0.5500000000000002
+  },
+  "val": {
+    "f1_at_0.5": {
+      "precision": 0.9919724770642202,
+      "recall": 0.9994222992489891,
+      "f1": 0.99568345323741,
+      "accuracy": 0.9961049078161517,
+      "roc_auc": 0.9992994015892221,
+      "pr_auc": 0.9976778809290255,
+      "tp": 1730,
+      "fp": 14,
+      "fn": 1,
+      "tn": 2106,
+      "n": 3851
+    },
+    "f1_at_tuned": {
+      "precision": 0.9942528735632183,
+      "recall": 0.9994222992489891,
+      "f1": 0.996830884471334,
+      "accuracy": 0.9971435990651779,
+      "roc_auc": 0.9992994015892221,
+      "pr_auc": 0.9976778809290255,
+      "tp": 1730,
+      "fp": 10,
+      "fn": 1,
+      "tn": 2110,
+      "n": 3851
+    }
+  },
+  "test": {
+    "f1_at_tuned": {
+      "precision": 0.9911225658648339,
+      "recall": 0.9997111496244945,
+      "f1": 0.995398331895312,
+      "accuracy": 0.9958446954940917,
+      "roc_auc": 0.9998622867164668,
+      "pr_auc": 0.9998221937255745,
+      "tp": 3461,
+      "fp": 31,
+      "fn": 1,
+      "tn": 4208,
+      "n": 7701
+    },
+    "f1_at_0.5": {
+      "precision": 0.9908388204981391,
+      "recall": 0.9997111496244945,
+      "f1": 0.995255212077642,
+      "accuracy": 0.995714842228282,
+      "roc_auc": 0.9998622867164668,
+      "pr_auc": 0.9998221937255745,
+      "tp": 3461,
+      "fp": 32,
+      "fn": 1,
+      "tn": 4207,
+      "n": 7701
+    }
+  },
+  "top_features": [
+    {
+      "feature": "has_reuters_dateline",
+      "coef": -4.652743093427361
+    },
+    {
+      "feature": "starts_with_city_dateline",
+      "coef": -1.632776990872611
+    },
+    {
+      "feature": "quote_count",
+      "coef": -1.4357574045863426
+    },
+    {
+      "feature": "title_len",
+      "coef": 1.369522093108919
+    },
+    {
+      "feature": "has_getty",
+      "coef": 1.3581651151760177
+    },
+    {
+      "feature": "has_via",
+      "coef": 1.3410800716726996
+    },
+    {
+      "feature": "title_has_exclamation",
+      "coef": 1.2058966272886245
+    },
+    {
+      "feature": "question_count",
+      "coef": 0.7175789894228853
+    },
+    {
+      "feature": "exclamation_count",
+      "coef": -0.4090132806865956
+    },
+    {
+      "feature": "has_follow_us",
+      "coef": 0.34418549985773056
+    },
+    {
+      "feature": "digit_ratio",
+      "coef": -0.31752474484424476
+    },
+    {
+      "feature": "has_url",
+      "coef": 0.22829315037179104
+    },
+    {
+      "feature": "body_has_url",
+      "coef": 0.22829315037179096
+    },
+    {
+      "feature": "title_has_question",
+      "coef": 0.1689398568792257
+    },
+    {
+      "feature": "text_len",
+      "coef": -0.1297535480059234
+    },
+    {
+      "feature": "uppercase_ratio",
+      "coef": -0.08882456917465155
+    },
+    {
+      "feature": "all_caps_word_count",
+      "coef": 0.08310020259509714
+    },
+    {
+      "feature": "has_our_standards",
+      "coef": 0.010057379417006622
+    }
+  ],
+  "rule_baselines": {
+    "no_reuters": {
+      "precision": 0.9888571428571429,
+      "recall": 0.9997111496244945,
+      "f1": 0.9942545245619075,
+      "accuracy": 0.9948058693676146,
+      "roc_auc": 0.9952554332694307,
+      "pr_auc": 0.9887013643659169,
+      "tp": 3461,
+      "fp": 39,
+      "fn": 1,
+      "tn": 4200,
+      "n": 7701
+    },
+    "has_url": {
+      "precision": 0.9883720930232558,
+      "recall": 0.14731369150779897,
+      "f1": 0.2564102564102564,
+      "accuracy": 0.6158940397350994,
+      "roc_auc": 0.5729491316703893,
+      "pr_auc": 0.5289275822765883,
+      "tp": 510,
+      "fp": 6,
+      "fn": 2952,
+      "tn": 4233,
+      "n": 7701
+    },
+    "has_getty": {
+      "precision": 0.9987389659520807,
+      "recall": 0.22876949740034663,
+      "f1": 0.37226792009400705,
+      "accuracy": 0.6531619270224646,
+      "roc_auc": 0.6142667963529217,
+      "pr_auc": 0.5751892309867251,
+      "tp": 792,
+      "fp": 1,
+      "fn": 2670,
+      "tn": 4238,
+      "n": 7701
+    },
+    "no_reuters_or_url_or_getty": {
+      "precision": 0.9871648602395893,
+      "recall": 0.9997111496244945,
+      "f1": 0.993398392652124,
+      "accuracy": 0.9940267497727567,
+      "roc_auc": 0.9945477191859203,
+      "pr_auc": 0.9870095705648328,
+      "tp": 3461,
+      "fp": 45,
+      "fn": 1,
+      "tn": 4194,
+      "n": 7701
+    }
+  },
+  "train_time_sec": 0.8238349999996899,
+  "git_commit": "01cc07a75e6af70681b3989cb4b875cda4037b8a",
+  "config_hash": "73072190dfcf5bdc9b27e9b7efcca577fbd782432579b29bcbb35761727cee4a",
+  "created_at": "2026-10-24T19:29:39"
+}

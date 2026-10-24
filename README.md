@@ -15,12 +15,13 @@ This repository is being built stage by stage following
 | 1 | dataset download + EDA report | ✅ |
 | 2 | cleaning, dedup/conflict audit, 70/10/20 split | ✅ |
 | 3 | TF-IDF + Logistic Regression / Linear SVM | ✅ |
-| 4 | shortcut-feature baseline | ⬜ |
-| 5 | Bi-LSTM | ⬜ |
-| 6 | DistilBERT | ⬜ |
-| 7 | evaluation, bootstrap CI, error analysis | ⬜ |
-| 8 | masked source-cue experiment | ⬜ |
+| 4 | shortcut-feature baseline | ✅ |
+| 5 | Bi-LSTM (deferred) | ⏸ |
+| 6 | DistilBERT (deferred) | ⏸ |
+| 7 | evaluation, bootstrap CI, error analysis | 🟡 |
+| 8 | masked source-cue experiment | ✅ |
 | 9 | figures + docs | ⬜ |
+| 10 | temporal / LIAR / near-dup (deferred) | ⏸ |
 
 ## Data
 
@@ -133,11 +134,42 @@ probabilities live in `results/predictions/` (git-ignored); aggregate metrics in
 `results/metrics.csv`, the alpha curve in `results/fusion.json`. Title-only is
 clearly weaker than body-only, but fusing both still adds a small amount.
 
+Stage 4 / 8 reproducibility:
+
+```bash
+python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
+python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
+python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
+```
+
 Full results, statistical checks and the interpretation caveats are kept in
 [`results/RESULTS.md`](results/RESULTS.md). The short version: body dominates,
 fusion/early-concat are statistically indistinguishable, and a one-line
 `(Reuters)` rule already reaches F1 0.994 — the benchmark is source-cue
 saturated, so these numbers are not evidence of real-world fact-checking.
+
+## Why the benchmark is saturated: five raw examples
+
+The first 100 rows of each raw file already show the shortcut. `True.csv`:
+91/100 bodies contain `(Reuters)`, 0 contain a URL, 0 contain `getty`.
+`Fake.csv`: 0 contain `(Reuters)`, 23 contain a URL, 79 contain `getty`,
+58 contain `featured image`.
+
+| # | label | source | excerpt | giveaway |
+|---|---|---|---|---|
+| 1 | real | `True.csv` #0 | `WASHINGTON (Reuters) - The head of a conservative Republican faction...` | city + `(Reuters)` dateline |
+| 2 | real | `True.csv` #4 | `SEATTLE/WASHINGTON (Reuters) - President Donald Trump called on...` | multi-city dateline |
+| 3 | fake | `Fake.csv` #0 | title: `Donald Trump Sends Out Embarrassing New Year’s Eve Message; This is Disturbing`; body ends `Photo by Andrew Burton/Getty Images.` | clickbait title + Getty credit |
+| 4 | fake | `Fake.csv` #5 | title: `...Black Boy While He Is In Handcuffs (GRAPHIC IMAGES)`; body ends `Featured image via David McNew/Stringer/Getty Images` | `Featured image` + Getty |
+| 5 | fake | `Fake.csv` #3 | title: `...Obama’s Name Coded Into His Website (IMAGES)`; body has `https://t.co/Fg7VacxRtJ pic.twitter.com/5gEMcjQTbH` | `t.co` / Twitter embed |
+
+The diagnostic result is blunt: a single `(Reuters)` rule reaches test F1
+0.9943, the 18-format-feature baseline reaches 0.9954, and the full TF-IDF
+models reach 0.9962 (LR) / 0.9970 (SVM). Paired bootstrap says the 18-feature
+baseline is statistically indistinguishable from both full-text models
+(p=0.43 vs LR, p=0.13 vs SVM). Removing the dateline, URLs and media credits
+lowers fusion F1 only to 0.9903–0.9944. The dataset is separable almost entirely
+by source formatting, not by whether the article is true.
 
 ## Configuration
 
@@ -160,6 +192,7 @@ CI (`.github/workflows/ci.yml`) runs `ruff` and `pytest -m "not slow"` on Ubuntu
 ## Hardware
 
 - TF-IDF + LR/SVM: laptop CPU, minutes.
+- Shortcut / masking experiments: laptop CPU, seconds to a few minutes.
 - Bi-LSTM: CPU/GPU, 20–60 min per epoch.
 - DistilBERT: Colab T4, 20–40 min per seed.
 
