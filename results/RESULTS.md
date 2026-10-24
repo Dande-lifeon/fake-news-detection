@@ -230,6 +230,9 @@ test 只评估一次。两种遮蔽强度：
 `results/source_cue.json`（两种模型 × 两种遮蔽 × 四个条件，含 CI/McNemar/命中数）、
 `results/feature_audit.csv`（original/dateline_url/format 的 top 特征）、
 `results/all_metrics.csv`（全部模型/条件/划分的统一 Acc/P/R/F1/AUC/CM，50 行）、
+`results/cis.csv`（逐条件 bootstrap 95% CI，200 行）、
+`results/error_examples.md`（LR fusion 的 2 个 FP、2 个 FN）、
+`results/figures/fig_*.{pdf,png}`（四路 F1、探针对比、混淆矩阵、alpha 曲线）、
 `results/predictions/*_source_cue_*.parquet`（逐样本预测，git-ignored）。
 
 ---

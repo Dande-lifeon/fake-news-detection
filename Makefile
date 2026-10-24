@@ -1,7 +1,7 @@
 PY ?= python
 PYTHONPATH := .
 
-.PHONY: install install-neural data download eda clean split classical shortcut source-cue collect-metrics eval env-report test lint smoke all
+.PHONY: install install-neural data download eda clean split classical shortcut source-cue collect-metrics eval ci figures error-examples env-report test lint smoke all
 
 install:
 	$(PY) -m pip install -e ".[dev]"
@@ -37,9 +37,24 @@ source-cue:
 collect-metrics:
 	$(PY) -m fakenews.eval.collect_metrics --config configs/base.yaml
 
-# `eval` is an alias for the implemented metrics collector.  `figures`,
-# `bilstm` and `distilbert` are intentionally absent until those modules exist.
-eval: collect-metrics
+# `eval` runs the full post-hoc pipeline: metrics, CIs, figures, FP/FN table.
+eval:
+	$(PY) -m fakenews.eval.evaluate --config configs/base.yaml
+
+ci:
+	$(PY) -m fakenews.eval.ci --config configs/base.yaml
+
+figures:
+	$(PY) -m fakenews.viz.figures --config configs/base.yaml
+
+error-examples:
+	$(PY) -m fakenews.eval.error_examples --config configs/base.yaml --model lr
+
+bilstm:
+	$(PY) -m fakenews.train.bilstm --config configs/bilstm.yaml --seed 42 --condition fusion
+
+distilbert:
+	$(PY) -m fakenews.train.distilbert --config configs/distilbert.yaml --seed 42 --condition fusion
 
 env-report:
 	$(PY) scripts/env_report.py --output docs/environment.md

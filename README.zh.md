@@ -17,14 +17,14 @@
 | 2 | 清洗、去重、70/10/20 划分 | ✅ 完成 |
 | 3 | TF-IDF 逻辑回归与线性 SVM | ✅ 完成 |
 | 4 | 格式特征 shortcut 基线 | ✅ 完成 |
-| 5 | Bi-LSTM | ⏸ 暂缓 |
-| 6 | DistilBERT | ⏸ 暂缓 |
+| 5 | Bi-LSTM | 🟡 代码就绪，未训练 |
+| 6 | DistilBERT | 🟡 代码就绪，未训练 |
 | 7 | bootstrap、McNemar、校准、错误分析 | 🟡 部分完成 |
 | 8 | 来源线索遮蔽 | ✅ 完成 |
 | 9 | 结果图与文档 | 🟡 进行中 |
 | 10 | 时间划分、LIAR、近重复划分 | ⏸ 暂缓 |
 
-目前可以直接跑的是阶段 0-4、阶段 8 和指标汇总；神经模型还没有实现，对应的命令暂时不存在。
+目前可以直接跑的是阶段 0-4、阶段 8、指标汇总和结果图。神经模型代码已经写好，但还没有训练结果：本机没有安装 torch/transformers，且 PyPI 不可达。
 
 ## 目录结构
 
@@ -168,7 +168,7 @@ fake 类的 test F1：
 
 主表用 0.5 阈值。按 val 调阈值最多让 test F1 变化 0.0012，所以 0.5 更稳。`alpha` 是概率混合权重，不代表两个分支的重要性。
 
-逐样本概率写在 `results/predictions/`（git 忽略）。汇总表是 `results/all_metrics.csv`。
+逐样本概率写在 `results/predictions/`（git 忽略）。汇总表是 `results/all_metrics.csv`，逐条件 95% CI 在 `results/cis.csv`，四张结果图在 `results/figures/`，FP/FN 表在 `results/error_examples.md`。
 
 ### 3. shortcut 与遮蔽实验
 
@@ -176,7 +176,7 @@ fake 类的 test F1：
 python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
-python -m fakenews.eval.collect_metrics --config configs/base.yaml
+python -m fakenews.eval.evaluate --config configs/base.yaml
 ```
 
 `shortcut` 只用 18 个表面特征训练逻辑回归：dateline、URL、Getty 与 `featured image` 署名、大小写、标点和长度。它不读正文。
@@ -239,7 +239,7 @@ CI 在 Ubuntu、Python 3.11 上跑 `ruff` 和 `pytest -m "not slow"`。单元测
 
 ## 硬件
 
-经典流程在笔记本 CPU 上几分钟跑完。shortcut 和遮蔽实验是秒到几分钟。Bi-LSTM 和 DistilBERT 还没有实现；计划是 Bi-LSTM 用笔记本 CPU，DistilBERT 用免费 Colab T4。
+经典流程在笔记本 CPU 上几分钟跑完。shortcut 和遮蔽实验是秒到几分钟。Bi-LSTM 和 DistilBERT 代码已经写好但还没有结果；训练需要 torch/transformers，本机未安装。计划是 Bi-LSTM 用笔记本 CPU，DistilBERT 用免费 Colab T4。
 
 ## 限制
 

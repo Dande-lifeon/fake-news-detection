@@ -36,19 +36,23 @@
 - Stage 4：18 个格式特征 + LR 的 shortcut 基线；单条 `(Reuters)` 规则。
 - Stage 8：LR/SVM 的两种遮蔽强度 `dateline_url` 和 `format`，含逐样本预测和 top 特征审计。
 - 统计检查：bootstrap CI、McNemar、校准（Brier/ECE）、错误计数。
+- 逐条件 95% CI 已写入 `results/cis.csv`（200 行，accuracy/precision/recall/F1）。
+- 四张结果图已生成：四路 F1、探针对比、fusion 混淆矩阵、alpha 曲线。
+- FP/FN 样例表已生成：`results/error_examples.md`。
+- 神经模型代码已写好：Bi-LSTM 和 DistilBERT 的双编码/门控融合、训练入口和配置。
 - 工程：50 个测试通过，ruff 通过，CI、环境记录、README 和运行日志齐全。
 
 ### 2.2 部分完成
 
-- Stage 7 的 bootstrap、McNemar、校准和错误分析已经做在 `RESULTS.md` 与分析脚本里，但还没有统一的 `evaluate.py` CLI。
-- 结果图只有 EDA 总览，还没有模型对比图、混淆矩阵、ΔF1 图和 alpha 曲线。
-- 错误分析只有类别汇总，还没有可用于 slides 的具体 FP/FN 样本表。
+- Stage 7 的 bootstrap、McNemar、校准和错误分析已经做在 `RESULTS.md` 与分析脚本里；`evaluate.py` 现在统一跑指标、CI、图和 FP/FN，但 McNemar/校准还没有并入这个入口。
+- 神经模型只有代码，没有训练结果：本机没有 torch/transformers，PyPI 不可达。
+- `feature_audit.csv` 的 `category` 列还是空的，top 特征尚未人工标注。
 
 ### 2.3 未完成
 
-- Bi-LSTM、DistilBERT（Stage 5/6）。
+- Bi-LSTM、DistilBERT 的实际结果（代码已就绪，缺依赖和算力）。
 - 时间划分、LIAR 跨数据集、近重复分组划分（Stage 10）。
-- 最终 report、slides、结果图。
+- 最终 report 和 slides。
 
 ---
 
@@ -99,6 +103,9 @@ fusion 的完整 test 指标：
 |---|---:|---:|---:|---:|---:|---:|---|
 | LR | 0.9966 | 0.9968 | 0.9957 | 0.9962 | 0.9998 | 0.9997 | 3447/11/15/4228 |
 | SVM | 0.9973 | 0.9963 | 0.9977 | 0.9970 | 0.9998 | 0.9997 | 3454/13/8/4226 |
+
+fusion F1 的 95% bootstrap CI：LR 0.9962 [0.9947, 0.9975]，SVM 0.9970 [0.9957, 0.9981]。
+逐条件的 accuracy/precision/recall/F1 CI 在 `results/cis.csv`。
 
 ### 4.2 shortcut 与单规则
 
@@ -231,9 +238,9 @@ test 只有 7,701 条，fusion 的错误数是 21–26；模型间 F1 差异只�
 ## 9. 还缺的实验数据（提醒）
 
 - **accuracy 不缺**：`results/all_metrics.csv` 已包含所有 50 个条件的 accuracy、precision、recall、F1、ROC-AUC、PR-AUC 和混淆矩阵。
-- **缺逐条件的 bootstrap CI**：`RESULTS.md` 只有关键比较的 CI；如果 slides 要给每个模型画 error bar，需要从 predictions 重新算。
-- **缺结果图**：目前只有 EDA 图；四路 F1、ΔF1、混淆矩阵、alpha 曲线都还没画。
-- **缺具体错误样本表**：需要从 predictions 取 FP/FN 各 2 条，附标题/正文片段。
-- **缺神经模型结果**：Bi-LSTM、DistilBERT 尚未实现，因此没有 original/masked 的 2×2 对比。
-- **缺时间划分、LIAR、近重复分组结果**：Stage 10 未做。
+- **逐条件 bootstrap CI 已补**：`results/cis.csv` 有 accuracy/precision/recall/F1 的 95% 区间，每行一个条件。
+- **结果图已补**：`results/figures/fig_four_way_f1`、`fig_probe_comparison`、`fig_confusion_fusion`、`fig_alpha_curve`。
+- **具体错误样本已补**：`results/error_examples.md` 有 2 个 FP、2 个 FN。
+- **仍缺神经模型结果**：Bi-LSTM、DistilBERT 代码已就绪，但本机没有 torch/transformers，PyPI 不可达，尚未训练。
+- **仍缺时间划分、LIAR、近重复分组结果**：Stage 10 未做。
 - **`feature_audit.csv` 的 category 列还是空的**：top 特征尚未人工标注为 source/format/content。

@@ -23,16 +23,16 @@ Dataset: <https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dat
 | 2 | cleaning, deduplication, 70/10/20 split | ✅ done |
 | 3 | TF-IDF LR and linear SVM | ✅ done |
 | 4 | format-feature shortcut baseline | ✅ done |
-| 5 | Bi-LSTM | ⏸ deferred |
-| 6 | DistilBERT | ⏸ deferred |
+| 5 | Bi-LSTM | 🟡 code ready, not trained |
+| 6 | DistilBERT | 🟡 code ready, not trained |
 | 7 | bootstrap, McNemar, calibration, error analysis | 🟡 partial |
 | 8 | source-cue masking | ✅ done |
 | 9 | result figures and docs | 🟡 in progress |
 | 10 | temporal split, LIAR, near-duplicate split | ⏸ deferred |
 
-The runnable path today is stages 0-4 and 8, plus the metrics collector. The
-neural stages are designed but not implemented; commands for them do not exist
-yet.
+The runnable path today is stages 0-4 and 8, plus the metrics collector and
+result figures. The neural stages have code but no trained results yet: torch
+and transformers are not installed and PyPI is unreachable from this machine.
 
 ## Repository layout
 
@@ -190,7 +190,9 @@ most 0.0012, so 0.5 is the safer default. `alpha` is a probability-mix weight,
 not a measure of branch importance.
 
 Per-sample probabilities are written to `results/predictions/` (git-ignored).
-The consolidated table is `results/all_metrics.csv`.
+The consolidated table is `results/all_metrics.csv`. Per-condition 95% CIs are
+in `results/cis.csv`, the four result figures are under `results/figures/`, and
+the FP/FN table is `results/error_examples.md`.
 
 ### 3. Shortcut and masking experiments
 
@@ -198,7 +200,7 @@ The consolidated table is `results/all_metrics.csv`.
 python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
-python -m fakenews.eval.collect_metrics --config configs/base.yaml
+python -m fakenews.eval.evaluate --config configs/base.yaml
 ```
 
 `shortcut` trains logistic regression on 18 surface features: dateline, URL,
@@ -282,9 +284,10 @@ fallback; they do not need the ISOT CSVs.
 ## Hardware
 
 The classical pipeline runs on a laptop CPU in minutes. The masking and shortcut
-experiments take seconds to a few minutes. Bi-LSTM and DistilBERT are not
-implemented yet; the plan targets a laptop CPU for Bi-LSTM and a free Colab T4
-for DistilBERT.
+experiments take seconds to a few minutes. Bi-LSTM and DistilBERT have code but
+no results yet; training needs torch and transformers, which are not installed
+here. The plan targets a laptop CPU for Bi-LSTM and a free Colab T4 for
+DistilBERT.
 
 ## Limitations
 
