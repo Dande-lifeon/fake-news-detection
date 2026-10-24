@@ -186,6 +186,7 @@ python -m fakenews.eval.collect_metrics --config configs/base.yaml
 ## 结果
 
 完整台账、置信区间、McNemar 检验、校准和错误分析在 [`results/RESULTS.md`](results/RESULTS.md)。
+第二次 milestone 的 1 页 report 和 slides 素材在 [`results/MILESTONE.md`](results/MILESTONE.md)。
 
 简要结论：
 

@@ -213,7 +213,9 @@ the removed cue.
 ## Results
 
 The full result ledger, confidence intervals, McNemar tests, calibration, and
-error analysis are in [`results/RESULTS.md`](results/RESULTS.md).
+error analysis are in [`results/RESULTS.md`](results/RESULTS.md). The Week 9
+summary used for the 1-page report and slides is
+[`results/MILESTONE.md`](results/MILESTONE.md).
 
 The short version:
 
