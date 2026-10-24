@@ -18,17 +18,17 @@ Dataset: <https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dat
 
 | Stage | Content | State |
 |---|---|---|
-| 0 | package skeleton, config, tests, CI | done |
-| 1 | data download and EDA | done |
-| 2 | cleaning, deduplication, 70/10/20 split | done |
-| 3 | TF-IDF LR and linear SVM | done |
-| 4 | format-feature shortcut baseline | done |
-| 5 | Bi-LSTM | deferred |
-| 6 | DistilBERT | deferred |
-| 7 | bootstrap, McNemar, calibration, error analysis | partial |
-| 8 | source-cue masking | done |
-| 9 | result figures and docs | in progress |
-| 10 | temporal split, LIAR, near-duplicate split | deferred |
+| 0 | package skeleton, config, tests, CI | ✅ done |
+| 1 | data download and EDA | ✅ done |
+| 2 | cleaning, deduplication, 70/10/20 split | ✅ done |
+| 3 | TF-IDF LR and linear SVM | ✅ done |
+| 4 | format-feature shortcut baseline | ✅ done |
+| 5 | Bi-LSTM | ⏸ deferred |
+| 6 | DistilBERT | ⏸ deferred |
+| 7 | bootstrap, McNemar, calibration, error analysis | 🟡 partial |
+| 8 | source-cue masking | ✅ done |
+| 9 | result figures and docs | 🟡 in progress |
+| 10 | temporal split, LIAR, near-duplicate split | ⏸ deferred |
 
 The runnable path today is stages 0-4 and 8, plus the metrics collector. The
 neural stages are designed but not implemented; commands for them do not exist
