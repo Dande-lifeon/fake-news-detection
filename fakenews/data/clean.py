@@ -1,16 +1,16 @@
 """Cleaning of the raw ISOT CSVs.
 
-Pipeline (order matters, see ``docs/coding_plan.md`` §5.4):
+Pipeline, in order (see ``docs/coding_plan.md`` section 5.4):
 
-1. ``text_clean = clean_text(text_raw)`` — HTML tags/control chars removed,
-   whitespace collapsed; URLs and ``(Reuters)`` are kept.
+1. ``text_clean = clean_text(text_raw)``: remove HTML tags and control
+   characters, collapse whitespace. URLs and ``(Reuters)`` stay.
 2. Drop rows whose cleaned body is ``<= min_len`` characters.
 3. Build ``dup_key`` from ``title`` + ``text_clean``.
-4. Drop **all** rows belonging to a ``dup_key`` seen with both labels.
-5. Exact duplicate removal (``keep="first"``) on ``dup_key``.
+4. Drop every row belonging to a ``dup_key`` seen with both labels.
+5. Remove exact duplicates (``keep="first"``) on ``dup_key``.
 
-The cleaned table is written both as Parquet (canonical, used by training) and
-as CSV (for inspection / handing the data to someone else).
+The cleaned table is written as Parquet (used by training) and, optionally, as
+CSV for inspection.
 """
 
 from __future__ import annotations

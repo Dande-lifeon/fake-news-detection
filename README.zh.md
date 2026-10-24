@@ -1,36 +1,54 @@
-# 假新闻检测 — ISOT（二分类文本分类）
+# ISOT 假新闻检测
 
-[English](README.md) | **简体中文**
+[English](README.md)
 
-根据新闻的 **标题 + 正文**，判断它是 **虚假新闻**（`label=1`）还是 **真实新闻**（`label=0`）。
-数据集为 ISOT Fake and Real News
-（[Kaggle: clmentbisaillon/fake-and-real-news-dataset](https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset)）。
+这个仓库在 ISOT Fake and Real News 数据集上训练并比较四个模型：TF-IDF 配逻辑回归、TF-IDF 配线性 SVM、Bi-LSTM，以及微调后的 DistilBERT。标题和正文分开编码后再融合，同时保留直接拼接的基线。
 
-本仓库按照 [`docs/coding_plan.md`](docs/coding_plan.md) 分阶段实现。当前进度：
+真正值得说的不是最高 F1。只用一条 Reuters dateline 规则就能到 0.994，18 个格式特征能到 0.995，完整 TF-IDF 模型是 0.996。ISOT 的标签几乎可以由来源和排版线索直接解出，所以这里的高分不能当作事实核查能力的证据。
+
+数据集：<https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset>
+
+## 状态
 
 | 阶段 | 内容 | 状态 |
 |---|---|---|
-| 0 | 仓库骨架、配置系统、测试、CI | ✅ |
-| 1 | 数据下载 + EDA 报告 | ✅ |
-| 2 | 清洗、去重/冲突审计、70/10/20 划分 | ✅ |
-| 3 | TF-IDF + 逻辑回归 / 线性 SVM | ✅ |
-| 4 | shortcut 格式特征 baseline | ✅ |
-| 5 | Bi-LSTM（暂缓） | ⏸ |
-| 6 | DistilBERT（暂缓） | ⏸ |
-| 7 | 评估、bootstrap 置信区间、错误分析 | 🟡 |
-| 8 | 来源线索遮蔽实验 | ✅ |
-| 9 | 图表 + 文档 | ⬜ |
-| 10 | 时间划分 / LIAR / 近重复（暂缓） | ⏸ |
+| 0 | 包结构、配置、测试、CI | 完成 |
+| 1 | 数据下载与 EDA | 完成 |
+| 2 | 清洗、去重、70/10/20 划分 | 完成 |
+| 3 | TF-IDF 逻辑回归与线性 SVM | 完成 |
+| 4 | 格式特征 shortcut 基线 | 完成 |
+| 5 | Bi-LSTM | 暂缓 |
+| 6 | DistilBERT | 暂缓 |
+| 7 | bootstrap、McNemar、校准、错误分析 | 部分完成 |
+| 8 | 来源线索遮蔽 | 完成 |
+| 9 | 结果图与文档 | 进行中 |
+| 10 | 时间划分、LIAR、近重复划分 | 暂缓 |
 
-## 数据
+目前可以直接跑的是阶段 0-4、阶段 8 和指标汇总；神经模型还没有实现，对应的命令暂时不存在。
 
-- `True.csv` — 路透社（Reuters）文章，`label = 0`（真实）
-- `Fake.csv` — 来自被标记网站的文章，`label = 1`（虚假）
-- 许可：**数据 CC BY-NC-SA 4.0**；代码 MIT。CSV 文件**不**包含在本仓库中。
+## 目录结构
 
-## 快速开始
+```text
+configs/            默认配置和模型覆盖配置
+data/               原始与处理后数据（git 忽略）
+docs/               数据卡、实验协议、开发计划、环境记录
+environment.yml     conda 基础环境
+.python-version     参考 Python 版本
+fakenews/
+  data/             下载、EDA、清洗、划分
+  features/         TF-IDF、shortcut 特征、遮蔽
+  models/           经典模型、融合层
+  train/            经典模型与 shortcut 训练入口
+  eval/             指标、bootstrap、指标汇总
+  experiments/      来源线索遮蔽
+scripts/            run_all.sh、smoke.sh、env_report.py
+tests/              单元与集成测试
+results/            纳入版本库的报告与指标；逐样本预测被忽略
+```
 
-需要 Python **3.10+**（在 Windows 上使用 3.11 测试）。在仓库根目录执行：
+## 环境
+
+参考版本是 Python 3.11。`requirements.txt` 是在 3.11 上生成的锁定版本，项目要求 3.11 或更高。
 
 ```bash
 python -m venv .venv
@@ -39,42 +57,69 @@ python -m venv .venv
 pip install -e ".[dev]"
 ```
 
-神经模型阶段（Bi-LSTM / DistilBERT）还需要 torch + transformers：
+如果要用锁定版本：
+
+```bash
+pip install -r requirements.txt
+pip install -e . --no-deps
+```
+
+Conda 用户可以从基础环境开始：
+
+```bash
+conda env create -f environment.yml
+conda activate fakenews
+pip install -e ".[dev]"
+```
+
+报告所用环境的具体版本在 [`docs/environment.md`](docs/environment.md)。重新生成：
+
+```bash
+python scripts/env_report.py --output docs/environment.md
+```
+
+`Makefile` 是可选的。Windows 上没有 `make` 时，直接运行下面的 `python -m ...` 命令。
+
+神经模型需要额外的包：
 
 ```bash
 pip install -e ".[dev,neural]"
 ```
 
-### 1. 获取数据
+## 数据
 
-在 Kaggle 页面（*Settings* → *API* → *Create New Token*）创建 API Token，并导出到环境变量（**不要提交到 git**）：
+两个 CSV 不放进仓库。
+
+- `True.csv`：Reuters 文章，`label=0`
+- `Fake.csv`：来自被标记站点的文章，`label=1`
+
+用 Kaggle API token 下载：
 
 ```powershell
-$env:KAGGLE_API_TOKEN = "KGAT_xxx"        # PowerShell
+$env:KAGGLE_API_TOKEN = "KGAT_xxx"
 ```
 
 ```bash
-export KAGGLE_API_TOKEN="KGAT_xxx"        # bash
-```
-
-```bash
+export KAGGLE_API_TOKEN="KGAT_xxx"
 python -m fakenews.data.download --config configs/base.yaml
 ```
 
-`download.py` 会校验两个 CSV、写入 `data/raw/CHECKSUMS.txt`，并优先使用 Kaggle API。
-如果所在网络阻断了到 Google Storage 的 TLS 连接（某些网络下常见），脚本会用 HTTP
-重试同一个签名 URL 并打印警告。手动下载的回退方式：
+如果下载被网络挡住，从 Kaggle 下载 `archive.zip` 后解压：
 
 ```bash
 python -m fakenews.data.download --archive path/to/archive.zip
 ```
 
-### 2. EDA → 清洗 → 划分
+下载器会检查两个文件，把 SHA-256 写进 `data/raw/CHECKSUMS.txt`，并生成 `data/raw/raw_summary.json`。
+
+## 运行流程
+
+### 1. EDA、清洗、划分
 
 ```bash
-python -m fakenews.data.eda    --config configs/base.yaml
-python -m fakenews.data.clean  --config configs/base.yaml --csv
-python -m fakenews.data.split  --config configs/base.yaml
+python -m fakenews.data.eda   --config configs/base.yaml
+python -m fakenews.data.clean --config configs/base.yaml --csv
+python -m fakenews.data.split --config configs/base.yaml
 ```
 
 输出：
@@ -82,61 +127,50 @@ python -m fakenews.data.split  --config configs/base.yaml
 ```text
 results/eda_report.md
 results/figures/fig_eda_overview.{png,pdf}
-data/processed/articles_clean.parquet   # 训练用主格式
-data/processed/articles_clean.csv       # 便于人工查看的副本
-data/processed/clean_log.json           # 清洗计数
-data/processed/{train,val,test}.parquet # 70 / 10 / 20，分层，seed 42
-data/processed/split_manifest.json      # 行数、类别计数、sha256
+data/processed/articles_clean.parquet
+data/processed/articles_clean.csv
+data/processed/clean_log.json
+data/processed/{train,val,test}.parquet
+data/processed/split_manifest.json
 ```
 
-清洗顺序：去 HTML/控制字符 → 压缩空白 → 删除正文 `<= 50` 字符的样本 →
-删除在真假两类中都出现过的 `dup_key` 整组 → 删除精确重复（`keep="first"`）。
-URL 和 `(Reuters)` dateline 在这一步**保留**；遮蔽它们是单独的 Stage 8 实验。
+清洗顺序是：去 HTML 和控制字符、压缩空白、丢掉 50 字符及以下的正文、删掉同一个 `dup_key` 同时出现两种标签的所有行、精确重复保留第一条。URL 和 Reuters dateline 在这一步保留，删除它们是单独的遮蔽实验。
 
-## 当前数据快照
-
-2026-10-23 运行，`min_text_len=50`、`seed=42`：
+当前快照使用 `min_text_len=50`、`seed=42`：
 
 | 项目 | 数值 |
-|---|---|
-| 原始行数 | 44,898（`True.csv` 21,417 + `Fake.csv` 23,481） |
+|---|---:|
+| 原始行数 | 44,898（`True.csv` 21,417，`Fake.csv` 23,481） |
 | 空正文 | 631 |
-| 删除：正文 ≤ 50 字符 | 844 |
+| 删除：正文 <= 50 字符 | 844 |
 | 删除：跨标签冲突 | 0 |
 | 删除：精确重复 | 5,551 |
-| **清洗后行数** | **38,503**（21,194 real / 17,309 fake） |
+| 清洗后 | 38,503（21,194 真，17,309 假） |
 | train / val / test | 26,951 / 3,851 / 7,701 |
 
-`subject` 在两类之间完全不重叠（real：`politicsNews`、`worldnews`；
-fake：另外六个取值），日期分布也不同，因此两者都不进入任何特征矩阵。
-清洗后的 CSV 约 293 MB，因为它同时保留了 `text_raw`、`text_clean` 和 `dup_key`；
-训练请使用 Parquet 文件。
+`subject` 在两类之间完全不重叠，`date` 分布也不同，所以两者都不进入特征。CSV 副本约 293 MB，因为保留了 `text_raw`、`text_clean` 和 `dup_key`；训练读 Parquet。
 
-## 经典 baseline（阶段 3）
+### 2. 经典基线
 
-`python -m fakenews.train.classical --config configs/base.yaml --model {lr,svm} --final`
+```bash
+python -m fakenews.train.classical --config configs/base.yaml --model lr  --final
+python -m fakenews.train.classical --config configs/base.yaml --model svm --final
+```
 
-单 seed（42），TF-IDF 只在 train 上 fit，`alpha` 和阈值只在 val 上选，
-在 train+val 上 refit 后只读取一次 test。F1（正类 = fake）：
+两个模型用同一份划分。TF-IDF 只在 train 上 fit；`C` 在 train 上做 5 折 CV；`alpha` 和阈值在 val 上选；最后在 train+val 上重训，再对 test 评估一次。
+
+fake 类的 test F1：
 
 | 模型 | title_only | body_only | concat | fusion | alpha |
-|---|---|---|---|---|---|
-| LR val | 0.9387 | 0.9916 | 0.9939 | **0.9951** | 0.40 |
-| LR test | 0.9429 | 0.9929 | 0.9962 | **0.9962** | 0.40 |
-| SVM val | 0.9396 | 0.9939 | 0.9959 | **0.9960** | 0.50 |
-| SVM test | 0.9425 | 0.9957 | 0.9975 | **0.9970** | 0.50 |
+|---|---:|---:|---:|---:|---:|
+| LR | 0.9429 | 0.9929 | 0.9962 | 0.9962 | 0.40 |
+| SVM | 0.9425 | 0.9957 | 0.9975 | 0.9970 | 0.50 |
 
-主表统一使用阈值 0.5；val 上调出的 per-condition 阈值只作为敏感性分析，
-对 test F1 的影响不超过 0.0012（例如 SVM concat tuned 0.9963 vs @0.5 0.9975；
-LR body tuned 0.9940 vs @0.5 0.9929）。`alpha` 是概率混合权重，不是分支重要性：
-title 分支校准更差，换成 logit 平均后最优 alpha 变为 0.30/0.45，test F1 基本不变
-（0.9961/0.9975）。
+主表用 0.5 阈值。按 val 调阈值最多让 test F1 变化 0.0012，所以 0.5 更稳。`alpha` 是概率混合权重，不代表两个分支的重要性。
 
-逐样本概率在 `results/predictions/`（已被 git 忽略）；所有模型/条件/划分的
-统一 @0.5 指标在 `results/all_metrics.csv`。title-only 明显弱于 body-only，
-但二者融合仍能带来小幅提升。
+逐样本概率写在 `results/predictions/`（git 忽略）。汇总表是 `results/all_metrics.csv`。
 
-Stage 4 / 8 复现命令：
+### 3. shortcut 与遮蔽实验
 
 ```bash
 python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
@@ -145,63 +179,81 @@ python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
 python -m fakenews.eval.collect_metrics --config configs/base.yaml
 ```
 
-完整结果、统计检验和解释性警告见
-[`results/RESULTS.md`](results/RESULTS.md)。简述：body 占主导，fusion 与 early concat
-在统计上无法区分；而且一条 `(Reuters)` 规则就已经达到 F1 0.994 —— 这个 benchmark
-已经被来源线索饱和，因此这些数字不能作为真实场景事实核查能力的证据。
+`shortcut` 只用 18 个表面特征训练逻辑回归：dateline、URL、Getty 与 `featured image` 署名、大小写、标点和长度。它不读正文。
 
-## 为什么这个 benchmark 已经饱和：5 条原始样本
+`source_cue` 对清洗后的正文做遮蔽，用同一套 LR/SVM 配置在遮蔽后的 train 上重训，再把遮蔽后的 test 预测和原始预测按同一条样本对齐。`C`、`alpha`、阈值都固定，所以唯一变化就是被删掉的线索。
 
-原始文件各取前 100 条就已经很明显。`True.csv`：91/100 条正文含 `(Reuters)`，
-0 条含 URL，0 条含 `getty`。`Fake.csv`：0 条含 `(Reuters)`，23 条含 URL，
-79 条含 `getty`，58 条含 `featured image`。
+## 结果
 
-| # | 标签 | 来源 | 片段 | 破绽 |
-|---|---|---|---|---|
-| 1 | real | `True.csv` #0 | `WASHINGTON (Reuters) - The head of a conservative Republican faction...` | 城市 + `(Reuters)` dateline |
-| 2 | real | `True.csv` #4 | `SEATTLE/WASHINGTON (Reuters) - President Donald Trump called on...` | 多城市 dateline |
-| 3 | fake | `Fake.csv` #0 | 标题：`Donald Trump Sends Out Embarrassing New Year’s Eve Message; This is Disturbing`；正文结尾 `Photo by Andrew Burton/Getty Images.` | 标题党 + Getty 署名 |
-| 4 | fake | `Fake.csv` #5 | 标题：`...Black Boy While He Is In Handcuffs (GRAPHIC IMAGES)`；正文结尾 `Featured image via David McNew/Stringer/Getty Images` | `Featured image` + Getty |
-| 5 | fake | `Fake.csv` #3 | 标题：`...Obama’s Name Coded Into His Website (IMAGES)`；正文含 `https://t.co/Fg7VacxRtJ pic.twitter.com/5gEMcjQTbH` | `t.co` / Twitter 嵌入 |
+完整台账、置信区间、McNemar 检验、校准和错误分析在 [`results/RESULTS.md`](results/RESULTS.md)。
 
-诊断结果很直接：单条 `(Reuters)` 规则 test F1=0.9943，18 个格式特征 baseline
-F1=0.9953，完整 TF-IDF 模型 0.9962（LR）/ 0.9970（SVM）；配对 bootstrap 显示
-18 特征 baseline 与两个全文模型在统计上无法区分（对 LR p=0.43，对 SVM p=0.13）。
-去掉 dateline、URL 和媒体署名后，fusion F1 也只降到 0.9903–0.9944。数据集几乎
-完全靠来源格式区分，而不是靠文章真实性。
+简要结论：
 
-## 配置系统
+- 正文远强于标题。title-only 的 F1 约 0.94，body-only 约 0.99。
+- fusion 和 early concat 在统计上没有区别。
+- 单条 `(Reuters)` 规则到 test F1 0.9943。
+- 18 个格式特征到 0.9953。
+- 全文 LR 和 SVM 到 0.9962 和 0.9970。
+- 遮掉 dateline、URL 和媒体署名后，fusion 仍有 0.9903-0.9944。
 
-`configs/base.yaml` 是唯一配置源；各模型配置只写覆盖项，加载时递归合并。
-所有 CLI 都支持：
+最后一条是重点。删掉最明显的线索并不能删掉捷径，因为语料里还有多种互相冗余的来源和话题信号。
+
+### 原始样本
+
+前 100 行就能看出模式。`True.csv` 里 91/100 的正文含 `(Reuters)`，0 条含 URL，0 条含 `getty`。`Fake.csv` 里 0 条含 `(Reuters)`，23 条含 URL，79 条含 `getty`，58 条含 `featured image`。
+
+| 标签 | 来源 | 片段 | 线索 |
+|---|---|---|---|
+| 真 | `True.csv` #0 | `WASHINGTON (Reuters) - The head of a conservative Republican faction...` | 城市 + Reuters dateline |
+| 真 | `True.csv` #4 | `SEATTLE/WASHINGTON (Reuters) - President Donald Trump called on...` | 多城市 dateline |
+| 假 | `Fake.csv` #0 | 标题以 `This is Disturbing` 结尾；正文以 `Photo by Andrew Burton/Getty Images.` 结尾 | 标题党 + Getty 署名 |
+| 假 | `Fake.csv` #5 | 正文以 `Featured image via David McNew/Stringer/Getty Images` 结尾 | featured image + Getty 署名 |
+
+## 复现
+
+- 每个入口都调用 `seed_everything(42)`。
+- 划分只生成一次，test 文件设为只读。
+- `split_manifest.json` 记录大小、类别计数、SHA-256 和 pandas 版本。
+- 每个 run 在 `results/logs/{run_id}/` 下保存 `config.yaml`、`environment.txt`、`git_commit.txt` 和 `train.log`。
+- `eval.collect_metrics` 会汇总它找到的每一个预测文件。同一个 `(model, condition, seed)` 只保留一次 test 运行，否则台账会出现重复行。
+
+实验协议写在 [`docs/protocol.md`](docs/protocol.md)。
+
+## 配置
+
+`configs/base.yaml` 是默认值。模型配置只写覆盖项，加载时递归合并。所有 CLI 都支持：
 
 ```bash
 --config configs/base.yaml --override data.min_text_len=80
 ```
 
-## 测试与 lint
+## 测试与 CI
 
 ```bash
 pytest -q
 ruff check .
 ```
 
-CI（`.github/workflows/ci.yml`）在 Ubuntu 上运行 `ruff` 和 `pytest -m "not slow"`。
+CI 在 Ubuntu、Python 3.11 上跑 `ruff` 和 `pytest -m "not slow"`。单元测试覆盖清洗、划分、TF-IDF、融合、指标、遮蔽和 Kaggle CLI 回退，不需要 ISOT 原始 CSV。
 
-## 硬件要求
+## 硬件
 
-- TF-IDF + LR/SVM：笔记本 CPU，分钟级。
-- shortcut / 遮蔽实验：笔记本 CPU，几秒到几分钟。
-- Bi-LSTM：CPU/GPU，每个 epoch 约 20–60 分钟。
-- DistilBERT：Colab T4，每个 seed 约 20–40 分钟。
+经典流程在笔记本 CPU 上几分钟跑完。shortcut 和遮蔽实验是秒到几分钟。Bi-LSTM 和 DistilBERT 还没有实现；计划是 Bi-LSTM 用笔记本 CPU，DistilBERT 用免费 Colab T4。
 
-## 已知限制
+## 限制
 
-- 标签来自**来源**，不是逐篇事实核查；模型可能学到来源风格而非真实性。
-- `subject` 和 `date` 只用于审计，绝不能作为特征。
-- 单一数据集、仅英文；神经模型会对正文做截断。
+- 标签来自发布来源，不是逐篇事实核查。模型可能学到来源风格，而不是真实性。
+- `subject` 和 `date` 只用于审计，不能作为特征。
+- 单一数据集，只有英文；神经模型会截断长正文。
+- 数据集接近饱和，模型之间很小的 F1 差异，没有配对检验就不要当成真实差异。
 
-## 许可证
+## 许可
 
-代码：MIT（见 `LICENSE`）。数据：CC BY-NC-SA 4.0 —— 见 `data/README.md` 和
-`docs/data_card.md`。
+代码用 MIT（见 `LICENSE`）。数据用 CC BY-NC-SA 4.0，见 `data/README.md` 和 [`docs/data_card.md`](docs/data_card.md)。
+
+## 常见问题
+
+- `download` 失败：检查 `KAGGLE_API_TOKEN`，或者用 `--archive` / 手动把 CSV 放进 `data/raw/`。
+- `split` 拒绝运行：它在保护已有的划分。只有确实想重新生成 train/val/test 时才加 `--force`。
+- Windows 上没有 `make`：直接跑上面的 `python -m ...` 命令。
+- `source_cue` 找不到预测：先跑经典基线。

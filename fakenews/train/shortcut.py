@@ -1,12 +1,12 @@
-"""Stage 4 — shortcut / format-feature baseline (LR on 18 surface features).
+"""Stage 4: shortcut and format-feature baseline (LR on 18 surface features).
 
 Usage::
 
     python -m fakenews.train.shortcut --config configs/shortcut.yaml --final
     python -m fakenews.train.shortcut --config configs/shortcut.yaml --smoke
 
-The point is diagnostic: how far can a model get **without reading the article
-content**, using only datelines, media credits, URLs, casing and lengths?
+It measures how far a model can get without reading the article: datelines,
+media credits, URLs, casing, and lengths only.
 """
 
 from __future__ import annotations

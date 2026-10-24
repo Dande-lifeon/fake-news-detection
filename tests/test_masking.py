@@ -27,11 +27,11 @@ def test_format_mask_removes_media_credits():
     assert "https://" not in masked
 
 
-def test_mask_dataframe_keeps_title_and_text_clean():
+def test_mask_dataframe_keeps_title_and_uses_clean_body():
     frame = pd.DataFrame(
         {
             "title": ["A title"],
-            "text_raw": ["WASHINGTON (Reuters) - Body text."],
+            "text_raw": ["WASHINGTON (Reuters) - <b>Body</b> text."],
             "text_clean": ["WASHINGTON (Reuters) - Body text."],
             "label": [0],
         }
@@ -40,6 +40,7 @@ def test_mask_dataframe_keeps_title_and_text_clean():
     assert masked.loc[0, "title"] == "A title"
     assert masked.loc[0, "text_clean"] == "WASHINGTON (Reuters) - Body text."
     assert "(Reuters)" not in masked.loc[0, "text_masked"]
+    assert "<b>" not in masked.loc[0, "text_masked"]
 
 
 def test_count_hits_by_label():

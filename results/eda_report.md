@@ -1,4 +1,4 @@
-# EDA — ISOT Fake and Real News
+# EDA: ISOT Fake and Real News
 
 ## 1. Overview
 
@@ -34,7 +34,7 @@
 
 - subjects only in real: ['politicsNews', 'worldnews']
 - subjects only in fake: ['Government News', 'Middle-east', 'News', 'US_News', 'left-news', 'politics']
-- shared subjects: **—**
+- shared subjects: none
 - `subject` is audit-only and must never enter a model feature.
 
 ## 3. Dates

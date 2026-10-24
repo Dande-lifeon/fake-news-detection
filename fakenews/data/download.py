@@ -4,9 +4,9 @@
 
 Authentication (in order of precedence):
 
-1. ``KAGGLE_API_TOKEN`` environment variable (new-style ``KGAT_...`` token) —
+1. ``KAGGLE_API_TOKEN`` environment variable (new-style ``KGAT_...`` token),
    used through ``kagglehub``.
-2. Classic ``~/.kaggle/kaggle.json`` (``username`` + ``key``) — used through
+2. Classic ``~/.kaggle/kaggle.json`` (``username`` and ``key``), used through
    ``kagglehub`` or the ``kaggle`` CLI.
 3. Manual download: drop ``True.csv`` / ``Fake.csv`` into ``data/raw/`` or pass
    ``--archive path/to/archive.zip``.
@@ -167,7 +167,10 @@ def _download_with_cli(raw_dir: Path, logger) -> Path | None:
         if result.returncode != 0:
             logger.warning("kaggle CLI failed: %s", (result.stderr or result.stdout).strip())
             return None
-        return Path(tmp)
+        # Copy before the TemporaryDirectory context exits; the directory is
+        # deleted afterwards, so returning its path would be a dangling handle.
+        _copy_from(Path(tmp), raw_dir)
+    return raw_dir
 
 
 def _copy_from(source_dir: Path, raw_dir: Path) -> None:
@@ -222,7 +225,7 @@ def validate_raw(true_path: Path, fake_path: Path) -> dict:
 def write_checksums(summary: dict, raw_dir: Path) -> Path:
     """Write ``data/raw/CHECKSUMS.txt`` (``sha256  filename`` per line)."""
     target = raw_dir / "CHECKSUMS.txt"
-    lines = ["# ISOT Fake and Real News dataset — SHA-256 of raw files\n"]
+    lines = ["# ISOT Fake and Real News dataset: SHA-256 of raw files\n"]
     for key in ("true", "fake"):
         lines.append(f"{summary[key]['sha256']}  {summary[key]['file']}\n")
     target.write_text("".join(lines), encoding="utf-8")

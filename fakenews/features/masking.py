@@ -6,9 +6,9 @@ Two mask levels are provided:
     Remove the ``CITY (Reuters) -`` dateline and URLs (the pre-registered
     experiment from the coding plan).
 ``format``
-    Additionally remove CMS/media-credit artefacts that are almost exclusive to
+    Also removes CMS and media-credit artefacts that are almost exclusive to
     the fake source: ``featured image``, ``Photo by ... / Getty Images``,
-    ``Image via ...``, ``via``, ``follow us`` / ``subscribe`` and ``read more``.
+    ``Image via ...``, ``via``, ``follow us`` / ``subscribe``, and ``read more``.
 
 Only the body is masked. Titles are left untouched so the title-only branch is a
 sanity check (its score should barely move).
@@ -59,12 +59,17 @@ def mask_body(text: str, mode: str = "dateline_url") -> str:
 
 
 def mask_dataframe(df: pd.DataFrame, mode: str = "dateline_url") -> pd.DataFrame:
-    """Return a copy of ``df`` with an extra ``text_masked`` column."""
+    """Return a copy of ``df`` with an extra ``text_masked`` column.
+
+    Mask the cleaned body, because that is what the baseline models were
+    trained on.  Falling back to ``text_raw`` keeps the helper usable on
+    fixtures that only provide raw text.
+    """
     frame = df.copy()
-    if "text_raw" in frame.columns:
-        source = frame["text_raw"]
-    elif "text_clean" in frame.columns:
+    if "text_clean" in frame.columns:
         source = frame["text_clean"]
+    elif "text_raw" in frame.columns:
+        source = frame["text_raw"]
     else:
         source = pd.Series([""] * len(frame), index=frame.index)
     frame["text_masked"] = source.fillna("").astype(str).map(lambda text: mask_body(text, mode))

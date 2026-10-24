@@ -4,6 +4,8 @@
 > 只保留工程与实现相关内容；
 > 配套文件：`Fake_News_Project_满分执行方案.md`（项目背景与实验设计），本文是它的“可执行代码版”。
 > 建议把本文件放进仓库的 `docs/coding_plan.md`，作为唯一的开发入口文档。
+>
+> **Implementation status (2026-10-24):** Stages 0–4 and 8 are implemented; Stage 7 is partial. Commands for `fakenews.train.bilstm`, `fakenews.train.distilbert`, `fakenews.eval.evaluate`, and `fakenews.viz.figures` are future work and will fail until those modules exist. See `README.md` for the current runnable path.
 
 ---
 
@@ -13,7 +15,7 @@
 2. 按第 7 节的顺序实现；每一阶段都有“完成标准”，没达到不要进入下一阶段。
 3. 所有路径相对仓库根目录；不要写绝对路径。
 4. 所有实验必须能由 `configs/*.yaml` + 命令行复现；禁止在 notebook 里手工改数据。
-5. 代码风格：Python 3.10+，类型标注，`ruff` 通过，`pytest` 通过。
+5. 代码风格：Python 3.11+，类型标注，`ruff` 通过，`pytest` 通过。
 
 ---
 
@@ -1126,7 +1128,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with: {python-version: "3.10"}
+        with: {python-version: "3.11"}
       - run: pip install -e ".[dev]"
       - run: ruff check .
       - run: pytest -q -m "not slow"
@@ -1268,7 +1270,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fakenews"
 version = "0.1.0"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
   "pandas>=2.0",
   "numpy>=1.24",

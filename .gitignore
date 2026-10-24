@@ -20,8 +20,11 @@ dist/
 .venv*/
 .ipynb_checkpoints/
 .pytest_cache/
+pytest-of-*/
 .ruff_cache/
 .mypy_cache/
+.coverage
+htmlcov/
 
 # local secrets (Kaggle token, etc.)
 .env

@@ -1,8 +1,9 @@
-"""Shortcut / format features that must not be mistaken for content signal.
+"""Surface features used to measure the source shortcut.
 
-All features are computed from ``title`` and ``text_raw`` only — never from
-``text_clean``, ``subject`` or ``date``. They capture the Reuters dateline,
-CMS/media credits, URLs and surface style that leak the source label in ISOT.
+Everything here comes from ``title`` and ``text_raw``, never from
+``text_clean``, ``subject`` or ``date``. The features cover the Reuters
+dateline, CMS and media credits, URLs, and surface style that leak the source
+label in ISOT.
 """
 
 from __future__ import annotations

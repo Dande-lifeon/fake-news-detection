@@ -14,6 +14,3 @@ python -m fakenews.train.shortcut  --config configs/shortcut.yaml --final
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model lr
 python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
 python -m fakenews.eval.collect_metrics --config configs/base.yaml
-
-python -m fakenews.eval.evaluate --config configs/base.yaml
-python -m fakenews.viz.figures   --config configs/base.yaml

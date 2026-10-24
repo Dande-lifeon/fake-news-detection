@@ -1,15 +1,15 @@
-"""Dual-branch classical models: TF-IDF + LR / calibrated LinearSVC.
+"""Dual-branch classical models: TF-IDF with LR or a calibrated LinearSVC.
 
-Four conditions are produced from one fit:
+One fit produces four conditions:
 
-* ``title_only``  — title branch only
-* ``body_only``   — body branch only
-* ``concat``      — early concatenation of both TF-IDF blocks, one classifier
-* ``fusion``      — late fusion ``alpha * p_title + (1 - alpha) * p_body``
+* ``title_only``: title branch only
+* ``body_only``: body branch only
+* ``concat``: early concatenation of both TF-IDF blocks, one classifier
+* ``fusion``: late fusion ``alpha * p_title + (1 - alpha) * p_body``
 
 ``alpha`` and the decision thresholds are selected on the validation split only.
-``refit_full`` re-fits the classifiers on ``train + val`` but **keeps** the
-vectorisers fitted on train, so the selected ``alpha``/``C`` stay valid.
+``refit_full`` refits the classifiers on ``train + val`` but keeps the vectorisers
+fitted on train, so the selected ``alpha`` and ``C`` remain valid.
 """
 
 from __future__ import annotations

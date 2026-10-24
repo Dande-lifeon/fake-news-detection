@@ -1,4 +1,4 @@
-"""Stage 8 — source-cue masking experiment.
+"""Stage 8: source-cue masking experiment.
 
 Retrain the classical model on bodies with the Reuters dateline and URLs removed
 (and optionally CMS/media-credit artefacts), then compare test F1 against the
@@ -28,11 +28,13 @@ from fakenews.utils import get_logger, load_json, save_json, seed_everything
 CONDITIONS = ("title_only", "body_only", "concat", "fusion")
 
 
-def _latest_predictions(results_dir: Path, model: str, condition: str) -> pd.DataFrame:
-    pattern = str(results_dir / "predictions" / f"{model}_{condition}_seed42_*.parquet")
+def _latest_predictions(results_dir: Path, model: str, condition: str, seed: int) -> pd.DataFrame:
+    pattern = str(results_dir / "predictions" / f"{model}_{condition}_seed{seed}_*.parquet")
     matches = sorted(glob.glob(pattern))
     if not matches:
-        raise FileNotFoundError(f"no original predictions for {model}/{condition}: {pattern}")
+        raise FileNotFoundError(
+            f"no original predictions for {model}/{condition}/seed{seed}: {pattern}"
+        )
     return pd.read_parquet(matches[-1])
 
 
@@ -107,8 +109,9 @@ def main(argv: list[str] | None = None) -> int:
         raise KeyError(f"no original run for model {args.model!r} in fusion.json")
     original = fusion[args.model]
     alpha = float(original["alpha"])
+    original_seed = int(original.get("seed", 42))
     best_c = {key: float(value) for key, value in original["best_c"].items()}
-    logger.info("original %s: alpha=%.2f C=%s", args.model, alpha, best_c)
+    logger.info("original %s: alpha=%.2f C=%s seed=%d", args.model, alpha, best_c, original_seed)
 
     hit_counts = count_hits(pd.concat([train, val, test], ignore_index=True))
     logger.info(
@@ -156,7 +159,7 @@ def main(argv: list[str] | None = None) -> int:
         for condition in CONDITIONS:
             if condition not in test_probs:
                 continue
-            original_pred = _latest_predictions(results, args.model, condition)
+            original_pred = _latest_predictions(results, args.model, condition, original_seed)
             original_pred = original_pred[original_pred["split"] == "test"].reset_index(drop=True)
             ids = test["id"].to_numpy()
             assert (original_pred["id"].to_numpy() == ids).all(), f"id mismatch {condition}"

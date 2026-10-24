@@ -38,6 +38,14 @@ def test_split_sizes_and_disjoint_ids():
     assert_split_invariants(**splits)
 
 
+def test_tiny_split_tolerates_small_count_noise():
+    # 40 rows cannot satisfy the 0.5 % rate tolerance exactly; the validator
+    # should allow a two-row absolute slack instead of failing the whole split.
+    frame = _fake_frame(40)
+    splits = split_dataset(frame, val_size=0.10, test_size=0.20, seed=42)
+    assert_split_invariants(**splits)
+
+
 def test_split_is_stratified():
     frame = _fake_frame(1000)
     splits = split_dataset(frame, val_size=0.10, test_size=0.20, seed=42)

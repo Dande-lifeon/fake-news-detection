@@ -65,7 +65,7 @@ def run_eda(df: pd.DataFrame, out_dir: Path, figures_dir: Path | None = None) ->
             frame[column] = ""
         frame[column] = frame[column].fillna("").astype(str)
 
-    report: list[str] = ["# EDA — ISOT Fake and Real News", ""]
+    report: list[str] = ["# EDA: ISOT Fake and Real News", ""]
 
     report += [
         "## 1. Overview",
@@ -104,9 +104,9 @@ def run_eda(df: pd.DataFrame, out_dir: Path, figures_dir: Path | None = None) ->
     real_subjects = set(frame.loc[frame["label"] == 0, "subject"])
     fake_subjects = set(frame.loc[frame["label"] == 1, "subject"])
     report += [
-        f"- subjects only in real: {sorted(real_subjects) or '—'}",
-        f"- subjects only in fake: {sorted(fake_subjects) or '—'}",
-        f"- shared subjects: **{sorted(real_subjects & fake_subjects) or '—'}**",
+        f"- subjects only in real: {sorted(real_subjects) or 'none'}",
+        f"- subjects only in fake: {sorted(fake_subjects) or 'none'}",
+        f"- shared subjects: {sorted(real_subjects & fake_subjects) or 'none'}",
         "- `subject` is audit-only and must never enter a model feature.",
         "",
     ]

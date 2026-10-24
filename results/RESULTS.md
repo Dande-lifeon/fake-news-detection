@@ -1,7 +1,8 @@
 # 模型结果台账（Model Results）
 
 > 本文件是项目唯一的模型结果汇总，后续每个阶段（shortcut / Bi-LSTM / DistilBERT / 来源线索 / 时间划分等）的结果都追加到本文件。
-> 机器可读产物：`results/metrics.csv`、`results/fusion.json`、`results/predictions/*.parquet`（逐样本预测，git-ignored）。
+> 机器可读产物：`results/all_metrics.csv`、`results/fusion.json`、`results/shortcut.json`、
+> `results/source_cue.json`、`results/predictions/*.parquet`（逐样本预测，git-ignored）。
 > EDA 报告单独放在 `results/eda_report.md`。
 
 最后更新：2026-10-24
@@ -186,16 +187,16 @@ test 只评估一次。两种遮蔽强度：
 | 模型 | 遮蔽 | fusion 原 | fusion 遮蔽后 | Δfus | 95% CI | body Δ | title Δ |
 |---|---|---|---:|---:|---:|---|---:|---:|
 | LR | dateline_url | 0.9962 | 0.9928 | −0.0035 | [−0.0051, −0.0022] | −0.0070 | 0.0000 |
-| LR | format | 0.9962 | 0.9903 | −0.0059 | [−0.0080, −0.0041] | −0.0089 | 0.0000 |
-| SVM | dateline_url | 0.9970 | 0.9944 | −0.0026 | [−0.0038, −0.0014] | −0.0068 | 0.0000 |
-| SVM | format | 0.9970 | 0.9915 | −0.0055 | [−0.0073, −0.0038] | −0.0100 | 0.0000 |
+| LR | format | 0.9962 | 0.9903 | −0.0059 | [−0.0080, −0.0041] | −0.0087 | 0.0000 |
+| SVM | dateline_url | 0.9970 | 0.9944 | −0.0026 | [−0.0038, −0.0014] | −0.0069 | 0.0000 |
+| SVM | format | 0.9970 | 0.9913 | −0.0056 | [−0.0075, −0.0039] | −0.0098 | 0.0000 |
 
 - 所有非 title 条件的 McNemar p ≤ 0.0003（format 全部 p<0.0001）；title-only 完全
   不变（p=1），证明遮蔽只动了正文，没有误伤标题。
 - body-only 掉得比 fusion 多（−0.007～−0.010），因为 fusion 还有未遮蔽的标题。
 - **即使去掉 dateline、URL 和媒体署名，fusion 仍有 0.9903–0.9944。**
-- 遮蔽后 LR body 的 top 特征变成 `said`(−27.95)、`president donald`(−15.55)、
-  `just`(+12.58)、`gop`(+12.28)、`reuters`(−11.68)：仍有残余来源词、话题词和风格词，
+- 遮蔽后 LR body 的 top 特征变成 `said`(−27.99)、`president donald`(−15.56)、
+  `just`(+12.57)、`gop`(+12.25)、`reuters`(−11.67)：仍有残余来源词、话题词和风格词，
   说明"来源/话题"信号不止 dateline/URL 这一层。
 
 ### 4.2b 完整指标（test，fusion）
@@ -207,7 +208,7 @@ test 只评估一次。两种遮蔽强度：
 | LR | format | 0.9913 | 0.9930 | 0.9876 | 0.9903 | 3419 | 24 | 43 | 4215 |
 | SVM | original | 0.9973 | 0.9963 | 0.9977 | 0.9970 | 3454 | 13 | 8 | 4226 |
 | SVM | dateline_url | 0.9949 | 0.9937 | 0.9951 | 0.9944 | 3445 | 22 | 17 | 4217 |
-| SVM | format | 0.9923 | 0.9925 | 0.9905 | 0.9915 | 3429 | 26 | 33 | 4213 |
+| SVM | format | 0.9923 | 0.9925 | 0.9905 | 0.9913 | 3429 | 27 | 33 | 4212 |
 
 ### 4.3 预期 vs 实测：为什么 ΔF1 只有 0.003–0.006
 
@@ -215,7 +216,7 @@ test 只评估一次。两种遮蔽强度：
 实测只有 −0.0035～−0.0059，偏差来自三个原因：
 
 1. **错误数其实翻倍了**：LR fusion 的 test 错误 26 → 50（dateline/URL）→ 67（format）；
-   SVM 21 → 39 → 59。F1 在 99% 以上被 TP 主导，错误数翻倍只让 F1 动 0.003–0.006。
+   SVM 21 → 39 → 60。F1 在 99% 以上被 TP 主导，错误数翻倍只让 F1 动 0.003–0.006。
 2. **遮蔽只删了 token，没删完来源/话题**：标题未动；`said`、`washington`、`president donald`
    等 Reuters 风格词，以及 `just`、`gop`、`obama`、`watch`、全大写等 fake 风格词仍在。
 3. **重训会适应**：模型在遮蔽文本上重新分配权重，残余线索被重新利用；这不是"遮蔽没生效"。
@@ -245,7 +246,7 @@ test 只评估一次。两种遮蔽强度：
 | LR fusion + dateline/URL 遮蔽 | 0.9928 |
 | LR fusion + format 遮蔽 | 0.9903 |
 | SVM fusion + dateline/URL 遮蔽 | 0.9944 |
-| SVM fusion + format 遮蔽 | 0.9915 |
+| SVM fusion + format 遮蔽 | 0.9913 |
 
 三个独立探针（正则、18 特征、全文模型）都落在 0.99–0.997；全文模型只比 18 个
 格式特征高 0.0009–0.0017；遮蔽来源线索只损失 0.0026–0.0059，仍然 99% 以上。
