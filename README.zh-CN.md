@@ -122,9 +122,15 @@ fake：另外六个取值），日期分布也不同，因此两者都不进入�
 | 模型 | title_only | body_only | concat | fusion | alpha |
 |---|---|---|---|---|---|
 | LR val | 0.9387 | 0.9916 | 0.9939 | **0.9951** | 0.40 |
-| LR test | 0.9433 | 0.9940 | 0.9960 | **0.9962** | 0.40 |
+| LR test | 0.9429 | 0.9929 | 0.9962 | **0.9962** | 0.40 |
 | SVM val | 0.9396 | 0.9939 | 0.9959 | **0.9960** | 0.50 |
-| SVM test | 0.9422 | 0.9954 | 0.9963 | **0.9970** | 0.50 |
+| SVM test | 0.9425 | 0.9957 | 0.9975 | **0.9970** | 0.50 |
+
+主表统一使用阈值 0.5；val 上调出的 per-condition 阈值只作为敏感性分析，
+对 test F1 的影响不超过 0.0012（例如 SVM concat tuned 0.9963 vs @0.5 0.9975；
+LR body tuned 0.9940 vs @0.5 0.9929）。`alpha` 是概率混合权重，不是分支重要性：
+title 分支校准更差，换成 logit 平均后最优 alpha 变为 0.30/0.45，test F1 基本不变
+（0.9961/0.9975）。
 
 test F1 使用 val 上为同一条件选出的阈值。逐样本概率在 `results/predictions/`
 （已被 git 忽略）；汇总指标在 `results/metrics.csv`，alpha 曲线在 `results/fusion.json`。
@@ -158,7 +164,7 @@ python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
 | 5 | fake | `Fake.csv` #3 | 标题：`...Obama’s Name Coded Into His Website (IMAGES)`；正文含 `https://t.co/Fg7VacxRtJ pic.twitter.com/5gEMcjQTbH` | `t.co` / Twitter 嵌入 |
 
 诊断结果很直接：单条 `(Reuters)` 规则 test F1=0.9943，18 个格式特征 baseline
-F1=0.9954，完整 TF-IDF 模型 0.9962（LR）/ 0.9970（SVM）；配对 bootstrap 显示
+F1=0.9953，完整 TF-IDF 模型 0.9962（LR）/ 0.9970（SVM）；配对 bootstrap 显示
 18 特征 baseline 与两个全文模型在统计上无法区分（对 LR p=0.43，对 SVM p=0.13）。
 去掉 dateline、URL 和媒体署名后，fusion F1 也只降到 0.9903–0.9944。数据集几乎
 完全靠来源格式区分，而不是靠文章真实性。
