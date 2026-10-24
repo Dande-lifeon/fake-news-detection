@@ -85,10 +85,23 @@ class DualTextModel:
         self.alpha_curve: list[dict[str, float]] = []
         self.thresholds: dict[str, float] = {}
         self.threshold_tuned: dict[str, float] = {}
+        self._fixed_c: dict[str, float] = {}
 
     # ------------------------------------------------------------------ fit
-    def fit(self, train: pd.DataFrame, val: pd.DataFrame) -> DualTextModel:
-        """Fit vectorisers on train, classifiers on train, select alpha/threshold on val."""
+    def fit(
+        self,
+        train: pd.DataFrame,
+        val: pd.DataFrame,
+        fixed_c: dict[str, float] | None = None,
+        fixed_alpha: float | None = None,
+    ) -> DualTextModel:
+        """Fit vectorisers on train, classifiers on train, select alpha/threshold on val.
+
+        ``fixed_c`` / ``fixed_alpha`` are used by pre-registered analyses (e.g. the
+        Stage 8 masked retrain) to reuse the original model's hyper-parameters
+        instead of tuning them again.
+        """
+        self._fixed_c = dict(fixed_c or {})
         self.matrices = build_tfidf(train, val, None, self.cfg, text_col=self.text_col)
         y_train = train["label"].to_numpy().astype(int)
         y_val = val["label"].to_numpy().astype(int)
@@ -104,7 +117,13 @@ class DualTextModel:
         p_title = self._predict(self.title_clf, self.matrices.title_val)
         p_body = self._predict(self.body_clf, self.matrices.body_val)
 
-        self.alpha, self.alpha_curve = self._select_alpha(p_title, p_body, y_val)
+        if fixed_alpha is not None:
+            self.alpha = float(fixed_alpha)
+            probs = combine_probs(p_title, p_body, self.alpha)
+            f1 = float(f1_score(y_val, (probs >= 0.5).astype(int), zero_division=0))
+            self.alpha_curve = [{"alpha": self.alpha, "val_f1": f1}]
+        else:
+            self.alpha, self.alpha_curve = self._select_alpha(p_title, p_body, y_val)
         p_fusion = combine_probs(p_title, p_body, self.alpha)
 
         concat_val = hstack([self.matrices.title_val, self.matrices.body_val]).tocsr()
@@ -122,6 +141,11 @@ class DualTextModel:
         return self
 
     def _fit_branch(self, matrix: csr_matrix, y: np.ndarray, name: str) -> tuple[object, float]:
+        fixed = self._fixed_c.get(name)
+        if fixed is not None:
+            clf = self._make_estimator(float(fixed)).fit(matrix, y)
+            return clf, float(fixed)
+
         folds = self._safe_folds(y)
         if self.model_type == "lr":
             estimator = LogisticRegression(max_iter=1000, solver="liblinear")
