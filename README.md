@@ -167,6 +167,10 @@ The current snapshot, built with `min_text_len=50` and `seed=42`:
 as a feature. The CSV copy is about 293 MB because it keeps `text_raw`,
 `text_clean`, and `dup_key`; training reads the Parquet file.
 
+The 631 empty bodies are a subset of the 844 bodies dropped for being 50
+characters or shorter, so they are not subtracted twice:
+44,898 - 844 - 5,551 = 38,503.
+
 ### 2. Classical baselines
 
 ```bash

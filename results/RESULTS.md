@@ -95,11 +95,12 @@ SVM = 0.9422 / 0.9954 / 0.9963 / 0.9970；相对 @0.5 的最大变化为 0.0012�
 
 ### 2.4 来源线索捷径（最重要 caveat）
 
-| 线索 | real | fake |
+| 线索（test split） | real | fake |
 |---|---|---|
 | 正文含 `(Reuters)` | 99.08% | 0.03% |
-| 正文含 URL | 0.14% | 14.73% |
-| 含 `getty` / `featured image` | 极少 | 大量（fake 专属） |
+| 正文含 URL | 0.14% | 14.67% |
+| 正文含 `getty` | 0.02% | 22.88% |
+| 正文含 `featured image` | 0.00% | 45.55% |
 
 - 单条规则 **"没有 (Reuters) 就判 fake"** 在 test 上已经达到 **F1=0.9943、Accuracy=0.9948**；完整 LR fusion 为 0.9962，只高 0.0019。
 - LR body 分支权重最大的 real 特征：`reuters`(−47.96)、`said`(−21.02)、`washington reuters`(−18.10)；最大的 fake 特征：`featured image`(+10.81)、`image`(+10.60)、`getty`(+7.08)。

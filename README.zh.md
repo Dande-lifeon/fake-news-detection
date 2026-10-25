@@ -150,6 +150,9 @@ data/processed/split_manifest.json
 
 `subject` 在两类之间完全不重叠，`date` 分布也不同，所以两者都不进入特征。CSV 副本约 293 MB，因为保留了 `text_raw`、`text_clean` 和 `dup_key`；训练读 Parquet。
 
+631 条空正文是 844 条“正文 <= 50 字符”的子集，不重复相减：
+44,898 - 844 - 5,551 = 38,503。
+
 ### 2. 经典基线
 
 ```bash
