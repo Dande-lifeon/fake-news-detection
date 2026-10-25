@@ -8,6 +8,9 @@
 
 数据集：<https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset>
 
+Milestone 2 交付物：[report PDF](reports/CS1675_Milestone2_Report.pdf) ·
+[slides PDF](reports/CS1675_Milestone2_Slides.pdf)。
+
 ## 状态
 
 | 阶段 | 内容 | 状态 |
