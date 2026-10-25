@@ -48,4 +48,3 @@ select = ["E", "F", "I", "UP", "B"]
 [tool.pytest.ini_options]
 markers = ["slow: tests that need torch or a GPU"]
 testpaths = ["tests"]
-addopts = "--basetemp=.tmp/pytest"
