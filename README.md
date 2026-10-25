@@ -14,8 +14,8 @@ so a high score here is not evidence of fact-checking.
 
 Dataset: <https://www.kaggle.com/datasets/clmentbisaillon/fake-and-real-news-dataset>
 
-Milestone 2 deliverables: [report PDF](reports/CS1675_Milestone2_Report.pdf) ·
-[slides PDF](reports/CS1675_Milestone2_Slides.pdf).
+Milestone 2 deliverables: [report PDF](reports/Milestone_Report.pdf) ·
+[slides PDF](reports/Milestone_Slides.pdf).
 
 ## Status
 
