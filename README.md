@@ -209,7 +209,7 @@ python -m fakenews.eval.evaluate --config configs/base.yaml
 
 `shortcut` trains logistic regression on 18 surface features: dateline, URL,
 Getty and "featured image" credits, casing, punctuation counts, and lengths. It
-never reads the article text.
+uses no body vocabulary; the body contributes only surface counts.
 
 `source_cue` masks the cleaned body, retrains the same LR/SVM configuration on
 the masked train split, and compares the masked test predictions with the

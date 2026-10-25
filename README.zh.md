@@ -182,7 +182,7 @@ python -m fakenews.experiments.source_cue --config configs/base.yaml --model svm
 python -m fakenews.eval.evaluate --config configs/base.yaml
 ```
 
-`shortcut` 只用 18 个表面特征训练逻辑回归：dateline、URL、Getty 与 `featured image` 署名、大小写、标点和长度。它不读正文。
+`shortcut` 只用 18 个表面特征训练逻辑回归：dateline、URL、Getty 与 `featured image` 署名、大小写、标点和长度。它不使用正文词义，正文只贡献表层统计。
 
 `source_cue` 对清洗后的正文做遮蔽，用同一套 LR/SVM 配置在遮蔽后的 train 上重训，再把遮蔽后的 test 预测和原始预测按同一条样本对齐。`C`、`alpha`、阈值都固定，所以唯一变化就是被删掉的线索。
 

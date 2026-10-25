@@ -122,7 +122,7 @@ SVM = 0.9422 / 0.9954 / 0.9963 / 0.9970；相对 @0.5 的最大变化为 0.0012�
 
 ## 3. Stage 4: shortcut / 格式特征 baseline
 
-只用 18 个格式特征（`fakenews/features/shortcut.py`），不读正文内容：
+只用 18 个格式特征（`fakenews/features/shortcut.py`），不使用正文词义，正文只贡献表层统计：
 Reuters dateline、URL、`via`/`getty`/`featured image`、关注/订阅、标题问号/感叹号、
 大写比例、长度、数字比例、引号数等。LR + 5 折 CV 选 C，train+val refit 后 test 一次。
 
