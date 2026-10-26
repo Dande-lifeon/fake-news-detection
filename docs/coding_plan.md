@@ -1,8 +1,8 @@
 # 假新闻检测项目 · 代码开发计划（Coding Plan）
 
-> 这份文档是给**开发会话**用的：读完第 1–4 节就能建仓库、装环境、按第 7 节顺序开始写代码。
+> 这份文档是给**开发会话**用的：第 1–4 节建仓库、装环境、按第 7 节顺序开始写代码。
 > 只保留工程与实现相关内容；
-> 配套文件：`Fake_News_Project_满分执行方案.md`（项目背景与实验设计），本文是它的“可执行代码版”。
+> 配套文件：`Fake_News_Project_执行方案.md`（项目背景与实验设计），本文是它的“可执行写代码版”。
 > 建议把本文件放进仓库的 `docs/coding_plan.md`，作为唯一的开发入口文档。
 >
 > **Implementation status (2026-10-24):** Stages 0–4 and 8 are implemented; Stage 7 is partial. Commands for `fakenews.train.bilstm`, `fakenews.train.distilbert`, `fakenews.eval.evaluate`, and `fakenews.viz.figures` are future work and will fail until those modules exist. See `README.md` for the current runnable path.
